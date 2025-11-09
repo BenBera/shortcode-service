@@ -1,13 +1,13 @@
 package library
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/BenBera/shortcode-service/app/constants"
 	"github.com/sirupsen/logrus"
 )
 

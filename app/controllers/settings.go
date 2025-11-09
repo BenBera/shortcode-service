@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
-	"bitbucket.org/maybets/shortcode-service/app/models"
 	"database/sql"
+	"github.com/BenBera/shortcode-service/app/constants"
+	"github.com/BenBera/shortcode-service/app/models"
 	"github.com/labstack/echo/v4"
 	goutils "github.com/mudphilo/go-utils"
 	"github.com/sirupsen/logrus"
@@ -351,7 +351,6 @@ func (controller *Controller) GetCategories(c echo.Context) error {
 	ctx, span := controller.Tracer.Start(c.Request().Context(), "GetCategories")
 	defer span.End()
 
-	
 	dbUtilslave := goutils.Db{DBSlave: controller.DBSlave, Context: ctx}
 
 	sqlQuery := "SELECT id, category_name, description, is_active FROM sms_categories ORDER BY category_name ASC"

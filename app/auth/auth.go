@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
-	"bitbucket.org/maybets/shortcode-service/app/library"
-	"bitbucket.org/maybets/shortcode-service/app/models"
 	"encoding/json"
 	"fmt"
+	"github.com/BenBera/shortcode-service/app/constants"
+	"github.com/BenBera/shortcode-service/app/library"
+	"github.com/BenBera/shortcode-service/app/models"
 	"github.com/go-redis/redis"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"

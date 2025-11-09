@@ -1,9 +1,9 @@
 package library
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
 	"context"
 	"encoding/json"
+	"github.com/BenBera/shortcode-service/app/constants"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -53,7 +53,7 @@ func Publish(ctx context.Context, conn *amqp.Connection, name string, payload in
 	headers := InjectAMQPHeaders(ctx)
 
 	msg := amqp.Publishing{
-		Headers: headers,
+		Headers:     headers,
 		ContentType: "text/plain",
 		Body:        message,
 		Priority:    priority,
@@ -72,7 +72,7 @@ func Publish(ctx context.Context, conn *amqp.Connection, name string, payload in
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "got error publishing message",
-				constants.DATA: message,
+				constants.DATA:        message,
 			}).
 			Error(err.Error())
 

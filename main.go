@@ -1,15 +1,15 @@
 package main
 
 import (
-	"bitbucket.org/maybets/shortcode-service/docs"
 	"context"
 	"fmt"
+	"github.com/BenBera/shortcode-service/docs"
 	"os"
 	"path/filepath"
 	"runtime"
 
-	"bitbucket.org/maybets/shortcode-service/app/database"
-	"bitbucket.org/maybets/shortcode-service/app/router"
+	"github.com/BenBera/shortcode-service/app/database"
+	"github.com/BenBera/shortcode-service/app/router"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"

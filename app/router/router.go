@@ -12,17 +12,17 @@ import (
 	"os"
 	"time"
 
-	"bitbucket.org/maybets/shortcode-service/app/auth"
-	"bitbucket.org/maybets/shortcode-service/app/controllers"
-	"bitbucket.org/maybets/shortcode-service/app/crontask"
-	db "bitbucket.org/maybets/shortcode-service/app/database"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/betting"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/fixture"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/identity"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/jackpot"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/shortcode"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/wallet"
-	_ "bitbucket.org/maybets/shortcode-service/docs"
+	"github.com/BenBera/shortcode-service/app/auth"
+	"github.com/BenBera/shortcode-service/app/controllers"
+	"github.com/BenBera/shortcode-service/app/crontask"
+	db "github.com/BenBera/shortcode-service/app/database"
+	"github.com/BenBera/shortcode-service/app/grpc/betting"
+	"github.com/BenBera/shortcode-service/app/grpc/fixture"
+	"github.com/BenBera/shortcode-service/app/grpc/identity"
+	"github.com/BenBera/shortcode-service/app/grpc/jackpot"
+	"github.com/BenBera/shortcode-service/app/grpc/shortcode"
+	"github.com/BenBera/shortcode-service/app/grpc/wallet"
+	_ "github.com/BenBera/shortcode-service/docs"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -116,7 +116,7 @@ func (a *App) initializeController(tr trace.Tracer, rabbitMQConn *amqp.Connectio
 		RedisConn:    a.RedisConn,
 		Tracer:       tr,
 	}
-	
+
 	var err error
 	controller.IdentityServiceClient, err = NewIdentityServiceClient(os.Getenv("identity_service_endpoint"))
 	if err != nil {
@@ -243,14 +243,13 @@ func (a *App) setRouters() {
 	a.E.Use(middleware.CORSWithConfig(corsConfig))
 
 	// callback
-	a.E.POST("/inbox",a.Inbox)
+	a.E.POST("/inbox", a.Inbox)
 	a.E.POST("/incoming/ussd", auth.Authenticate(a.IncomingUSSD, a.GlobalRedisConn, a.Controller.Tracer, "shortcode", "write"))
 	a.E.POST("/sdp", a.SDPIncomingSMS)
 	a.E.POST("/dlr", a.SDPShortcodeDLR)
 	a.E.PUT("/templates", auth.Authenticate(a.UpdateTemplates, a.GlobalRedisConn, a.Controller.Tracer, "shortcode", "write"))
 	a.E.GET("/templates", auth.Authenticate(a.GetTemplates, a.GlobalRedisConn, a.Controller.Tracer, "shortcode", "read"))
 	a.E.GET("/ussd/hops", auth.Authenticate(a.UssdHops, a.GlobalRedisConn, a.Controller.Tracer, "shortcode", "read"))
-
 
 	a.E.POST("/outcome/alias", auth.Authenticate(a.CreateOutcomeAlias, a.GlobalRedisConn, a.Controller.Tracer, "shortcode", "write"))
 	a.E.PUT("/outcome/alias/:id", auth.Authenticate(a.UpdateOutcomeAlias, a.GlobalRedisConn, a.Controller.Tracer, "shortcode", "update"))
@@ -367,7 +366,7 @@ func getGrpcConnTls(target string) *grpc.ClientConn {
 
 func NewIdentityServiceClient(URL string) (identity.IdentityClient, error) {
 	log.Printf("NewIdentityServiceClient - %s", URL)
-	conn :=  getGrpcConnWithFallback(URL)
+	conn := getGrpcConnWithFallback(URL)
 
 	if conn == nil {
 		return nil, fmt.Errorf("failed to establish connection to Identity Service at %s", URL)
@@ -387,7 +386,7 @@ func NewFixtureServiceClient(URL string) (fixture.FixtureClient, error) {
 
 func NewWalletServiceClient(URL string) (wallet.WalletClient, error) {
 	//log.Printf("NewWalletServiceClient - %s", URL)
-	conn :=  getGrpcConnWithFallback(URL)
+	conn := getGrpcConnWithFallback(URL)
 	if conn == nil {
 		return nil, fmt.Errorf("failed to establish connection to Wallet Service at %s", URL)
 	}

@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
-	"bitbucket.org/maybets/shortcode-service/app/models"
 	"database/sql"
+	"github.com/BenBera/shortcode-service/app/constants"
+	"github.com/BenBera/shortcode-service/app/models"
 	"github.com/labstack/echo/v4"
 	goutils "github.com/mudphilo/go-utils"
 	"github.com/sirupsen/logrus"
@@ -29,7 +29,7 @@ func (controller *Controller) GetOutcomeAlias(c echo.Context) error {
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "No templates sets",
-				constants.DATA: sqlQuery,
+				constants.DATA:        sqlQuery,
 			}).
 			Warn(err.Error())
 
@@ -44,7 +44,7 @@ func (controller *Controller) GetOutcomeAlias(c echo.Context) error {
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error retrieving bet limits ",
-				constants.DATA: sqlQuery,
+				constants.DATA:        sqlQuery,
 			}).
 			Error(err.Error())
 
@@ -61,10 +61,10 @@ func (controller *Controller) GetOutcomeAlias(c echo.Context) error {
 
 	for rows.Next() {
 
-		var outcome_id,specifier,alias,market_name  sql.NullString
-		var id,market_id  sql.NullInt64
+		var outcome_id, specifier, alias, market_name sql.NullString
+		var id, market_id sql.NullInt64
 
-		err = rows.Scan(&id,&market_id,&outcome_id,&specifier,&alias,&market_name)
+		err = rows.Scan(&id, &market_id, &outcome_id, &specifier, &alias, &market_name)
 		if err != nil {
 
 			logrus.WithContext(ctx).
@@ -77,11 +77,11 @@ func (controller *Controller) GetOutcomeAlias(c echo.Context) error {
 		}
 
 		res = append(res, models.MarketAlias{
-			ID:        id.Int64,
-			MarketID:  market_id.Int64,
-			Specifier: specifier.String,
-			OutcomeID: outcome_id.String,
-			Alias:     alias.String,
+			ID:         id.Int64,
+			MarketID:   market_id.Int64,
+			Specifier:  specifier.String,
+			OutcomeID:  outcome_id.String,
+			Alias:      alias.String,
 			MarketName: market_name.String,
 		})
 
@@ -113,10 +113,10 @@ func (controller *Controller) CreateOutcomeAlias(c echo.Context) error {
 	dbUtils := goutils.Db{DB: controller.DB, Context: ctx}
 
 	inserts := map[string]interface{}{
-		"market_id": u.MarketID,
-		"specifier": u.Specifier,
+		"market_id":  u.MarketID,
+		"specifier":  u.Specifier,
 		"outcome_id": u.OutcomeID,
-		"alias": u.Alias,
+		"alias":      u.Alias,
 	}
 
 	_, err := dbUtils.UpsertWithContext("sms_market", inserts, nil)
@@ -125,7 +125,7 @@ func (controller *Controller) CreateOutcomeAlias(c echo.Context) error {
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error creating market alias ",
-				constants.DATA: inserts,
+				constants.DATA:        inserts,
 			}).
 			Error(err.Error())
 
@@ -136,7 +136,7 @@ func (controller *Controller) CreateOutcomeAlias(c echo.Context) error {
 	}
 
 	return RespondRaw(c, http.StatusCreated, models.SuccessResponse{
-		Status:    http.StatusCreated,
+		Status:  http.StatusCreated,
 		Message: "market alias creating successfully",
 	})
 
@@ -174,23 +174,23 @@ func (controller *Controller) UpdateOutcomeAlias(c echo.Context) error {
 	dbUtils := goutils.Db{DB: controller.DB, Context: ctx}
 
 	inserts := map[string]interface{}{
-		"market_id": u.MarketID,
-		"specifier": u.Specifier,
+		"market_id":  u.MarketID,
+		"specifier":  u.Specifier,
 		"outcome_id": u.OutcomeID,
-		"alias": u.Alias,
+		"alias":      u.Alias,
 	}
 
 	condition := map[string]interface{}{
 		"id": id,
 	}
 
-	_, err := dbUtils.UpdateWithContext("sms_market",condition, inserts)
+	_, err := dbUtils.UpdateWithContext("sms_market", condition, inserts)
 	if err != nil {
 
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error updating market alias ",
-				constants.DATA: inserts,
+				constants.DATA:        inserts,
 			}).
 			Error(err.Error())
 
@@ -201,7 +201,7 @@ func (controller *Controller) UpdateOutcomeAlias(c echo.Context) error {
 	}
 
 	return RespondRaw(c, http.StatusCreated, models.SuccessResponse{
-		Status:    http.StatusCreated,
+		Status:  http.StatusCreated,
 		Message: "market alias updated successfully",
 	})
 
@@ -228,13 +228,13 @@ func (controller *Controller) DeleteOutcomeAlias(c echo.Context) error {
 		"id": id,
 	}
 
-	_, err := dbUtils.DeleteWithContext("sms_market",condition)
+	_, err := dbUtils.DeleteWithContext("sms_market", condition)
 	if err != nil {
 
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error deleting market alias ",
-				constants.DATA: id,
+				constants.DATA:        id,
 			}).
 			Error(err.Error())
 
@@ -245,7 +245,7 @@ func (controller *Controller) DeleteOutcomeAlias(c echo.Context) error {
 	}
 
 	return RespondRaw(c, http.StatusCreated, models.SuccessResponse{
-		Status:    http.StatusCreated,
+		Status:  http.StatusCreated,
 		Message: "market alias deleted successfully",
 	})
 

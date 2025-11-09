@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/models"
+	"github.com/BenBera/shortcode-service/app/models"
 	"github.com/labstack/echo/v4"
 )
 

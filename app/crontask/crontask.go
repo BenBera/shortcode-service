@@ -1,10 +1,10 @@
 package crontask
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/controllers"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/identity"
 	"context"
 	"database/sql"
+	"github.com/BenBera/shortcode-service/app/controllers"
+	"github.com/BenBera/shortcode-service/app/grpc/identity"
 	"github.com/go-redis/redis"
 	amqp "github.com/rabbitmq/amqp091-go"
 	trace "go.opentelemetry.io/otel/trace"

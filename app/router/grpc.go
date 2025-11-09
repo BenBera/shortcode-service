@@ -1,11 +1,11 @@
 package router
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/database"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/shortcode"
-	"bitbucket.org/maybets/shortcode-service/app/models"
 	"context"
 	"fmt"
+	"github.com/BenBera/shortcode-service/app/database"
+	"github.com/BenBera/shortcode-service/app/grpc/shortcode"
+	"github.com/BenBera/shortcode-service/app/models"
 	"log"
 	"strconv"
 	"strings"

@@ -1,15 +1,15 @@
 package crontask
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/models"
 	"context"
 	"encoding/xml"
+	"github.com/BenBera/shortcode-service/app/models"
 	goutils "github.com/mudphilo/go-utils"
 	"log"
 	"os"
 )
 
-func (cron *Crontask) GetMarketsData(ctx context.Context)  {
+func (cron *Crontask) GetMarketsData(ctx context.Context) {
 
 	ctx, span := cron.Tracer.Start(ctx, "GetMarketsData")
 	defer span.End()
@@ -18,12 +18,12 @@ func (cron *Crontask) GetMarketsData(ctx context.Context)  {
 
 	headers := map[string]string{
 		"x-access-token": os.Getenv("betrader_token"),
-		"accept": "*/*",
+		"accept":         "*/*",
 	}
 
 	endpoint := "https://api.betradar.com/v1/descriptions/en/markets.xml?include_mappings=false"
 
-	status, payload := goutils.HTTPGet(endpoint,headers, nil)
+	status, payload := goutils.HTTPGet(endpoint, headers, nil)
 	if status < 200 || status > 299 {
 
 		log.Printf("invalid status %d | %s ", status, payload)
@@ -35,7 +35,7 @@ func (cron *Crontask) GetMarketsData(ctx context.Context)  {
 	err := xml.Unmarshal([]byte(payload), sports)
 	if err != nil {
 
-		log.Printf("error decoding xml to BetradarSports %s ",err.Error())
+		log.Printf("error decoding xml to BetradarSports %s ", err.Error())
 		return
 	}
 
@@ -47,29 +47,28 @@ func (cron *Crontask) GetMarketsData(ctx context.Context)  {
 		//marketName := s.Name
 
 		inserts := map[string]interface{}{
-			"market_id": marketID,
+			"market_id":   marketID,
 			"market_name": s.Name,
 		}
 
-		_, err = dbUtils.UpsertWithContext("markets",inserts,[]string{"market_name"})
+		_, err = dbUtils.UpsertWithContext("markets", inserts, []string{"market_name"})
 		if err != nil {
 
-			log.Printf("error inserting markets %s ",err.Error())
+			log.Printf("error inserting markets %s ", err.Error())
 		}
 
 		for _, o := range s.Outcomes.Outcome {
 
-
 			insertsOutcomes := map[string]interface{}{
-				"market_id": marketID,
-				"outcome_id": o.ID,
+				"market_id":    marketID,
+				"outcome_id":   o.ID,
 				"outcome_name": o.Name,
 			}
 
-			_, err = dbUtils.UpsertWithContext("outcomes",insertsOutcomes,[]string{"outcome_name"})
+			_, err = dbUtils.UpsertWithContext("outcomes", insertsOutcomes, []string{"outcome_name"})
 			if err != nil {
 
-				log.Printf("error inserting outcomes %s ",err.Error())
+				log.Printf("error inserting outcomes %s ", err.Error())
 			}
 
 		}
@@ -82,10 +81,10 @@ func (cron *Crontask) GetMarketsData(ctx context.Context)  {
 				"data_type": o.Type,
 			}
 
-			_, err = dbUtils.UpsertWithContext("specifiers",insertsSpecifiers,[]string{"data_type"})
+			_, err = dbUtils.UpsertWithContext("specifiers", insertsSpecifiers, []string{"data_type"})
 			if err != nil {
 
-				log.Printf("error inserting specifiers %s ",err.Error())
+				log.Printf("error inserting specifiers %s ", err.Error())
 			}
 
 		}

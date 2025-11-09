@@ -1,12 +1,12 @@
 package crontask
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
-	"bitbucket.org/maybets/shortcode-service/app/library"
-	"bitbucket.org/maybets/shortcode-service/app/models"
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/BenBera/shortcode-service/app/constants"
+	"github.com/BenBera/shortcode-service/app/library"
+	"github.com/BenBera/shortcode-service/app/models"
 	goutils "github.com/mudphilo/go-utils"
 	"github.com/sirupsen/logrus"
 	"time"

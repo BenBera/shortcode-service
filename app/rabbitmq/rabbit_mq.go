@@ -1,10 +1,10 @@
 package rabbitmq
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/BenBera/shortcode-service/app/constants"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/trace"
@@ -12,13 +12,13 @@ import (
 	"strings"
 )
 
-//MessageBody is the struct for the body passed in the AMQP message. The type will be set on the Request header
+// MessageBody is the struct for the body passed in the AMQP message. The type will be set on the Request header
 type MessageBody struct {
 	Data []byte
 	Type string
 }
 
-//Message is the amqp request to publish
+// Message is the amqp request to publish
 type Message struct {
 	Queue         string
 	ReplyTo       string
@@ -28,7 +28,7 @@ type Message struct {
 	Body          []byte
 }
 
-//RabbitMQConnection is the connection created
+// RabbitMQConnection is the connection created
 type RabbitMQConnection struct {
 	name          string
 	conn          *amqp.Connection
@@ -40,15 +40,14 @@ type RabbitMQConnection struct {
 	MaxPriority   int
 	ConsumerTag   string
 	err           chan error
-	Tracer trace.Tracer
-
+	Tracer        trace.Tracer
 }
 
 var (
 	connectionPool = make(map[string]*RabbitMQConnection)
 )
 
-//NewConnection returns the new connection object
+// NewConnection returns the new connection object
 func NewConnection(r trace.Tracer, queueName string, maxPriority, PrefetchCount int) *RabbitMQConnection {
 
 	prefix := os.Getenv("queue_prefix")
@@ -72,14 +71,14 @@ func NewConnection(r trace.Tracer, queueName string, maxPriority, PrefetchCount 
 		err:           make(chan error),
 		MaxPriority:   maxPriority,
 		ConsumerTag:   ConsumerTag,
-		Tracer: r,
+		Tracer:        r,
 	}
 
 	return c
 
 }
 
-//GetConnection returns the connection which was instantiated
+// GetConnection returns the connection which was instantiated
 func GetConnection(name string) *RabbitMQConnection {
 
 	return connectionPool[name]
@@ -98,7 +97,7 @@ func (r *RabbitMQConnection) Connect(ctx context.Context, conn *amqp.Connection)
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error opening channel conn.Channel ",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -113,7 +112,7 @@ func (r *RabbitMQConnection) Connect(ctx context.Context, conn *amqp.Connection)
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: fmt.Sprintf("%s channel is closed", r.name),
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -133,7 +132,7 @@ func (r *RabbitMQConnection) Connect(ctx context.Context, conn *amqp.Connection)
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "exchange Qos error",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -153,7 +152,7 @@ func (r *RabbitMQConnection) Connect(ctx context.Context, conn *amqp.Connection)
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "exchange declare error",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -173,7 +172,7 @@ func (r *RabbitMQConnection) BindQueue(ctx context.Context) error {
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error in declaring the queue channel.QueueDeclare ",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -186,7 +185,7 @@ func (r *RabbitMQConnection) BindQueue(ctx context.Context) error {
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error in declaring the queue channel.QueueBind ",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -197,13 +196,13 @@ func (r *RabbitMQConnection) BindQueue(ctx context.Context) error {
 	return nil
 }
 
-//Reconnect reconnects the connection
+// Reconnect reconnects the connection
 func (r *RabbitMQConnection) Reconnect(ctx context.Context) error {
 
 	logrus.WithContext(ctx).
 		WithFields(logrus.Fields{
 			constants.DESCRIPTION: "reconnecting ",
-			constants.DATA: r.queue,
+			constants.DATA:        r.queue,
 		}).
 		Infof("reconnection %s channel ", r.name)
 
@@ -212,7 +211,7 @@ func (r *RabbitMQConnection) Reconnect(ctx context.Context) error {
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "failed to Reconnect consumer  ",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -224,7 +223,7 @@ func (r *RabbitMQConnection) Reconnect(ctx context.Context) error {
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "failed to BindQueue  ",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -235,7 +234,7 @@ func (r *RabbitMQConnection) Reconnect(ctx context.Context) error {
 
 }
 
-//Consume consumes the messages from the queues and passes it as map of chan of amqp.Delivery
+// Consume consumes the messages from the queues and passes it as map of chan of amqp.Delivery
 func (r *RabbitMQConnection) Consume(ctx context.Context, fn func(context.Context, <-chan amqp.Delivery, string) error) error {
 
 	delivery, err := r.channel.Consume(r.queue, r.queue, false, false, false, false, nil)
@@ -244,7 +243,7 @@ func (r *RabbitMQConnection) Consume(ctx context.Context, fn func(context.Contex
 		logrus.WithContext(ctx).
 			WithFields(logrus.Fields{
 				constants.DESCRIPTION: "error starting to consume  ",
-				constants.DATA: r.queue,
+				constants.DATA:        r.queue,
 			}).
 			Error(err.Error())
 
@@ -253,19 +252,19 @@ func (r *RabbitMQConnection) Consume(ctx context.Context, fn func(context.Contex
 
 	for {
 
-		err = fn(ctx,delivery, r.ConsumerTag)
+		err = fn(ctx, delivery, r.ConsumerTag)
 
 		if err := <-r.err; err != nil {
 
 			r.Reconnect(ctx)
 
-			err := r.Consume(ctx,fn)
+			err := r.Consume(ctx, fn)
 			if err != nil {
 
 				logrus.WithContext(ctx).
 					WithFields(logrus.Fields{
 						constants.DESCRIPTION: "failed to setup consumer  ",
-						constants.DATA: r.queue,
+						constants.DATA:        r.queue,
 					}).
 					Error(err.Error())
 

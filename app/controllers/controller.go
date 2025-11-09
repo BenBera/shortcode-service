@@ -3,11 +3,11 @@ package controllers
 import (
 	"database/sql"
 
-	"bitbucket.org/maybets/shortcode-service/app/grpc/betting"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/fixture"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/identity"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/jackpot"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/wallet"
+	"github.com/BenBera/shortcode-service/app/grpc/betting"
+	"github.com/BenBera/shortcode-service/app/grpc/fixture"
+	"github.com/BenBera/shortcode-service/app/grpc/identity"
+	"github.com/BenBera/shortcode-service/app/grpc/jackpot"
+	"github.com/BenBera/shortcode-service/app/grpc/wallet"
 	"github.com/go-redis/redis"
 	amqp "github.com/rabbitmq/amqp091-go"
 	trace "go.opentelemetry.io/otel/trace"

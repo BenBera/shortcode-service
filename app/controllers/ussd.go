@@ -11,17 +11,17 @@ import (
 
 	"os"
 
-	"bitbucket.org/maybets/shortcode-service/app/constants"
-	fx "bitbucket.org/maybets/shortcode-service/app/grpc/fixture"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/jackpot"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/wallet"
-	"bitbucket.org/maybets/shortcode-service/app/library"
-	"bitbucket.org/maybets/shortcode-service/app/models"
+	"github.com/BenBera/shortcode-service/app/constants"
+	fx "github.com/BenBera/shortcode-service/app/grpc/fixture"
+	"github.com/BenBera/shortcode-service/app/grpc/jackpot"
+	"github.com/BenBera/shortcode-service/app/grpc/wallet"
+	"github.com/BenBera/shortcode-service/app/library"
+	"github.com/BenBera/shortcode-service/app/models"
 	"github.com/labstack/echo/v4"
 	goutils "github.com/mudphilo/go-utils"
 	"github.com/sirupsen/logrus"
 
-	"bitbucket.org/maybets/shortcode-service/app/grpc/identity"
+	"github.com/BenBera/shortcode-service/app/grpc/identity"
 
 	"github.com/labstack/gommon/log"
 
@@ -143,15 +143,15 @@ func (controller *Controller) IncomingUSSD(c echo.Context) error {
 	log.Printf("the profile id is %v | msisdn %v | user Response %v | response %v", profileid, msisdn, userResponse, response.Text)
 
 	//store in db each session hopes request
-	
+
 	sessionhopeinserts := map[string]interface{}{
 		"user_input": userResponse,
 		"session_id": session,
 		"msisdn":     msisdn,
-		"response":     response.Text,
+		"response":   response.Text,
 	}
 	dbUtils.Insert("session_hopes", sessionhopeinserts)
-	
+
 	return RespondRaw(c, http.StatusOK, response)
 
 }
@@ -1056,7 +1056,6 @@ func (controller *Controller) GetJpgames(ctx context.Context, profileID int64, s
 		jackpotHeader = header
 		currentPage = 0
 	}
-
 
 	log.Printf("currentpage  now here %v and category id  is %v and games length %v", currentPage, categoryID, len(games))
 

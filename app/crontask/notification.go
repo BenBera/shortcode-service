@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"bitbucket.org/maybets/shortcode-service/app/constants"
-	"bitbucket.org/maybets/shortcode-service/app/models"
+	"github.com/BenBera/shortcode-service/app/constants"
+	"github.com/BenBera/shortcode-service/app/models"
 
 	goutils "github.com/mudphilo/go-utils"
 )
@@ -20,17 +20,14 @@ func Notificationerror(db *sql.DB) {
 	for _ = range ticker.C {
 
 		errorNotification(db)
-		
+
 	}
 
 	select {}
 }
 
-
-
-
 func errorNotification(db *sql.DB) {
-	
+
 	dbUtilMaster := goutils.Db{DB: db} // Use master DB for updates
 
 	// Load the Nairobi timezone
@@ -70,7 +67,7 @@ func errorNotification(db *sql.DB) {
 		if errorData.NumberOfSends < 3 &&
 			errorData.NoOfErrors > 10 &&
 			errorData.NoOfErrors > errorData.PreviousErrors {
-			
+
 			sendMailNotification(errorData, dbUtilMaster)
 		}
 	}
@@ -138,26 +135,18 @@ func sendMailNotification(errorData models.SMSError, dbUtilMaster goutils.Db) {
 	}
 	SendMail(1, emailData2)
 
-	
 }
-
-
 
 func SendMail(clientID int64, data models.EmailSend) int {
 	endpoint := constants.INTOUCHMAILENDPOINT
 	headers := map[string]string{
-		"x-token":    os.Getenv("INTOUCH_MAIL_TOKEN"),
+		"x-token":     os.Getenv("INTOUCH_MAIL_TOKEN"),
 		"x-client-id": fmt.Sprintf("%d", clientID),
 	}
 
 	dt := data
 
-	
-
 	status, _ := goutils.HTTPPost(endpoint, headers, dt)
-
-	
 
 	return status
 }
-

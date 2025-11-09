@@ -1,4 +1,4 @@
-module bitbucket.org/maybets/shortcode-service
+module github.com/BenBera/shortcode-service
 
 go 1.21
 

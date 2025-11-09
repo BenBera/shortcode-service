@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"bitbucket.org/maybets/shortcode-service/app/constants"
-	"bitbucket.org/maybets/shortcode-service/app/grpc/identity"
-	"bitbucket.org/maybets/shortcode-service/app/models"
 	"context"
 	"fmt"
+	"github.com/BenBera/shortcode-service/app/constants"
+	"github.com/BenBera/shortcode-service/app/grpc/identity"
+	"github.com/BenBera/shortcode-service/app/models"
 	goutils "github.com/mudphilo/go-utils"
 	"github.com/sirupsen/logrus"
 	"net/http"

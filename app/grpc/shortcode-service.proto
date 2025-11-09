@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "bitbucket.org/maybets/shortcode-service/app/grpc/shortcode";
+option go_package = "github.com/BenBera/shortcode-service/app/grpc/shortcode";
 package protobuf;
 
 // The Odds service definition.
