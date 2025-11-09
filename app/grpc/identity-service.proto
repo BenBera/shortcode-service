@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+option go_package = "bitbucket.org/maybets/identity-service/grpc/identity";
+option java_multiple_files = true;
+option java_package = "com.bitbucket.maybets.grpc";
+option java_outer_classname = "Identity";
+
+package grpc;
+
+// The Identity service definition.
+service Identity {
+  rpc GetProfileByID (ProfileID) returns (Profile) {}
+  rpc GetProfileByMsisdn (Msisdn) returns (Profile) {}
+  rpc ChangeStatus (StatusRequest) returns (StatusRequest) {}
+  rpc CreateUser (NewUser) returns (ResponseStatus) {}
+  rpc RequestCode (CodeRequest) returns (CodeResponse) {}
+  rpc Ping (PingRequest) returns (PongRequest) {}
+
+}
+
+message PingRequest {
+
+}
+
+message PongRequest {
+  int64 Status = 1;
+  string Data = 2;
+}
+
+
+message ProfileID {
+  int32 profileID = 1;
+}
+
+message Profile {
+  int64 id = 1;
+  int64 status = 2;
+  string firstName = 3;
+  string lastName = 4;
+  int64 msisdn = 5;
+  string created = 6;
+}
+
+message Msisdn {
+  int64 msisdn = 1;
+}
+
+message NewUser {
+  string firstName = 1;
+  string lastName = 2;
+  int64 msisdn = 3;
+}
+message CodeRequest {
+  int64 msisdn = 1;
+}
+
+message CodeResponse {
+  int64 code = 1;
+  string description = 2;
+}
+
+message ResponseStatus {
+
+  int64 statusCode = 1;
+  string statusDescription = 2;
+  int64 NewUser = 3;
+  Profile profile = 4;
+}
+message StatusRequest{
+  int32 profileID = 1;
+  int32 status = 2;
+}

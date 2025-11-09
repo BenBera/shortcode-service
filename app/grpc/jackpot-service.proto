@@ -1,0 +1,126 @@
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+option go_package = "bitbucket.org/maybets/jackpot-service/app/grpc/jackpot";
+package protobuf;
+
+// The Jackpot service definition.
+service Jackpot {
+  rpc JackpotBetSummary(JPBetSummaryRequest) returns (JPBetSummaryResponse) {}
+  rpc PlaceBet(JackpotBetRequest) returns (PlaceBetResponse) {}
+  rpc JPBetStatus(JPBetStatusRequest) returns (JPBetStatusResponse) {}
+  rpc AutoPick(AutoPickRequest) returns (PlaceBetResponse) {}
+  rpc AliasPick(AliasPickRequest) returns (PlaceBetResponse) {}
+  rpc JpGames(JackpotGamesRequest) returns (JackpotGamesResponse){}
+
+  rpc Ping (JackpotPing) returns (JackpotPong) {}
+
+}
+
+message JackpotPing {
+
+}
+
+message JackpotPong {
+  int64 Status = 1;
+  string Data = 2;
+}
+
+// The request message containing the selection details.
+message JPBetSummaryRequest {
+  int32 profileID = 1;
+}
+
+message JPBetSummaryResponse {
+  int32 NumberOfBets = 1;
+  float Stake = 2;
+  float Winning = 3;
+}
+
+message JackpotSelectedSlips {
+
+  string MatchName = 1;
+  string Description = 2;
+  int64 Status = 3;
+
+} 
+
+message JackpotBetRequest {
+  repeated JackpotSlips JackpotSlips = 1;
+  int64 ProfileID = 2;
+  float stake = 3;
+  string source = 4;
+  string ipAddress = 5;
+  int64 betType = 6;
+  string BookingCode = 7;
+  int64 JackpotID = 8;
+
+}
+message JackpotGamesRequest {
+  int64 CategoryID = 1;
+}
+message JackpotGamesResponse {
+  string Games = 1;
+}
+
+
+message JackpotSlips {
+  int64  MatchID = 1;
+  int64  ProducerID = 2;
+  int64  MatchNumber = 3;
+  int64  MarketID = 4;
+  string OutcomeID = 5;
+  string Specifier  = 6;
+
+}
+
+message JPBetStatusResponse {
+
+  int64  ID = 1;
+  string Description = 2;
+  int64 Status = 3;
+  float Payout = 4;
+  repeated JackpotSelectedSlips JackpotSelectedSlips = 5;
+  int64 JackpotID = 6;
+
+}
+
+message JPBetStatusRequest {
+  int64 profileID = 1;
+  string ShareCode = 2;
+}
+
+message PlaceBetResponse {
+  int64  status = 1;
+  string description = 2;
+  string shareCode = 3;
+}
+
+message AutoPickRequest {
+  int64 ProfileID = 1;
+  float stake = 2;
+  string ipAddress = 3;
+  int64 JackpotID = 4;
+
+}
+
+message AliasPickRequest {
+  int64 ProfileID = 1;
+  float stake = 2;
+  string ipAddress = 3;
+  int64 JackpotID = 4;
+  string Alias = 5;
+
+}

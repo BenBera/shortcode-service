@@ -1,0 +1,166 @@
+syntax = "proto3";
+option go_package = "bitbucket.org/maybets/wallet-service/app/grpc/wallet";
+package protobuf;
+
+// The Odds service definition.
+service Wallet {
+  // Sends GetOdds status request
+  rpc DebitAccount (DebitRequest) returns (DebitResponse) {}
+  rpc CreditAccount (DebitRequest) returns (DebitResponse) {}
+  rpc GetBalance (BalanceRequest) returns (BalanceResponse) {}
+  rpc STK (STKRequest) returns (STKResponse) {}
+  rpc Withdraw (WithdrawRequest) returns (WithdrawResponse) {}
+  rpc RequestPaymentCallback (RequestPaymentCallbackRequest) returns (CallbackResponse) {}
+  rpc SendPaymentCallback (CallbackRequest) returns (CallbackResponse) {}
+  rpc Deposit (DepositRequest) returns (CallbackResponse) {}
+  rpc UpdateTransaction (UpdateTransactionRequest) returns (UpdateTransactionResponse) {}
+  rpc RollbackTransaction (RollbackRequest) returns (RollbackResponse) {}
+  rpc CreditWinningAccount (DebitRequest) returns (DebitResponse) {}
+
+  rpc Ping (WalletPing) returns (WalletPong) {}
+
+}
+
+// The request message containing the selection details.
+message DebitRequest {
+  int64 profileID = 1;
+  string transactionID = 2;
+  string transactionType = 3;
+  string description = 4;
+  float amount = 5;
+  int32 ID = 6;
+  string service_name = 7;
+  string ip_address = 8;
+  int64 ReferenceID = 9;
+}
+
+message DebitResponse {
+  int32 Status = 1;
+  float CurrentBalance = 2;
+  float PendingBalance = 3;
+  string Description = 4;
+  int32 ID = 5;
+  int64 TransactionID = 6;
+}
+
+message BalanceRequest {
+  int64 profileID = 1;
+}
+
+message BalanceResponse {
+  float CurrentBalance = 1;
+  float PendingBalance = 2;
+  float WithdrawableBalance = 3;
+}
+
+message WalletPing {
+
+}
+
+message WalletPong {
+  int64 Status = 1;
+  string Data = 2;
+}
+
+message WithdrawRequest {
+
+  int64 ProfileID = 1;
+  float Amount = 2;
+  string ip_address = 3;
+  string service_name = 4;
+}
+
+message STKRequest {
+
+  int64 ProfileID = 1;
+  float Amount = 2;
+  string Account = 3;
+  string Channel = 4;
+}
+
+message WithdrawResponse {
+
+  int64 Status = 1;
+  string Description = 2;
+}
+
+message STKResponse {
+
+  int64 Status = 1;
+  string Description = 2;
+}
+
+
+message CallbackRequest {
+  int64 TransactionID = 1;
+  string FirstName = 2;
+  string MiddleName = 3;
+  string LastName = 4;
+  string Msisdn = 5;
+  string Account = 6;
+  string Reference = 7;
+  float Amount = 8;
+  int64 Status = 9;
+  string Channel = 10;
+  string IPAddress = 11;
+  string Description = 12;
+}
+
+message RequestPaymentCallbackRequest {
+  int64 TransactionID = 1;
+  int64 Status = 2;
+  string Description = 3;
+}
+
+message CallbackResponse {
+  int64 Status = 1;
+  string Description = 2;
+}
+
+message StatusRequest{
+  int64 profileID = 1;
+  int32 status = 2;
+}
+
+message UpdateTransactionRequest {
+
+  int64 TransactionID = 1;
+  int64 ID = 2;
+  string Description = 3;
+
+}
+
+message UpdateTransactionResponse {
+  int64 Status = 1;
+  string Description = 2;
+}
+
+
+message RollbackRequest {
+  int64 TransactionID = 1;
+  string description = 2;
+  string service_name = 3;
+  string ip_address = 4;
+}
+
+message RollbackResponse {
+  int64 Status = 1;
+  string Description = 2;
+  float CurrentBalance = 3;
+  int64 TransactionID = 4;
+}
+
+message DepositRequest {
+  string FirstName = 1;
+  string MiddleName = 2;
+  string LastName = 3;
+  string Msisdn = 4;
+  string Account = 5;
+  string Reference = 6;
+  float Amount = 7;
+  string Channel = 8;
+  string IPAddress = 9;
+  string shortCode = 10;
+  float walletBalance = 11;
+  int64 TransactionId = 12;
+}

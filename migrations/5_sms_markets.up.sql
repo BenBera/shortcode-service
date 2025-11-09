@@ -1,0 +1,15 @@
+CREATE TABLE sms_market (
+     id INT NOT NULL AUTO_INCREMENT ,
+     market_id INT NOT NULL ,
+     outcome_id VARCHAR(150) NOT NULL ,
+     specifier VARCHAR(150) NOT NULL ,
+     alias VARCHAR(150) NOT NULL ,
+     created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+     updated TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+     PRIMARY KEY (id),
+    INDEX (market_id),
+    INDEX (outcome_id),
+    INDEX (specifier),
+    INDEX (created),
+    INDEX (updated),
+    UNIQUE (alias));

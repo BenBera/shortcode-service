@@ -1,0 +1,1 @@
+INSERT INTO sms_template (name, message) VALUE ('JOIN',''),('HELP',''),('BALANCE_QUERY','');

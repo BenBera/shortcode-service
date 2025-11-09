@@ -1,0 +1,897 @@
+definitions:
+  models.BetSuccessResponse:
+    properties:
+      bet_id:
+        description: BetID bet id that was created
+        type: string
+      data:
+        description: Message status description
+        type: string
+      status:
+        description: Status http status code
+        type: integer
+    required:
+    - bet_id
+    - data
+    - status
+    type: object
+  models.Category:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  models.CreateMarketAlias:
+    properties:
+      alias:
+        description: Alias custom alias
+        type: string
+      market_id:
+        description: MarketID market ID
+        type: integer
+      outcome_id:
+        description: OutcomeID market outcome ID
+        type: string
+      specifier:
+        description: Specifier market line specifier
+        type: string
+    type: object
+  models.ErrorResponse:
+    properties:
+      error_code:
+        description: ErrorCode error status code
+        type: integer
+      error_message:
+        description: ErrorMessage status description
+        type: string
+    required:
+    - error_code
+    - error_message
+    type: object
+  models.Inbox:
+    properties:
+      inbox_id:
+        description: InboxID id of the message
+        type: integer
+      message:
+        description: Message sms sent by user
+        type: string
+      msisdn:
+        description: Msisdn mobile number
+        type: string
+    type: object
+  models.Keyword:
+    properties:
+      category_id:
+        type: integer
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      keyword:
+        type: string
+    type: object
+  models.MarketAlias:
+    properties:
+      alias:
+        description: Alias custom alias
+        type: string
+      id:
+        description: ID
+        type: integer
+      market_id:
+        description: MarketID market ID
+        type: integer
+      market_name:
+        description: MarketName market name
+        type: string
+      outcome_id:
+        description: OutcomeID market outcome ID
+        type: string
+      specifier:
+        description: Specifier market line specifier
+        type: string
+    type: object
+  models.SuccessResponse:
+    properties:
+      data:
+        description: Message status description
+        type: string
+      status:
+        description: Status http status code
+        type: integer
+    required:
+    - data
+    - status
+    type: object
+  models.Template:
+    properties:
+      content:
+        description: Content content of the sms template
+        type: string
+      name:
+        description: Name name of the sms template
+        enum:
+        - JOIN
+        - HELP
+        - BALANCE_QUERY
+        - SMS_GAMES
+        type: string
+    required:
+    - content
+    - name
+    type: object
+  models.USSD:
+    properties:
+      code:
+        description: ussd code
+        type: string
+      input:
+        description: INPUT
+        type: string
+      level:
+        description: level
+        type: integer
+      msisdn:
+        description: Msisdn mobile number
+        type: integer
+      network:
+        description: network
+        type: string
+      session:
+        description: user Session
+        type: string
+      text:
+        description: Message sms sent by user
+        type: string
+    type: object
+  models.UpdateStatus:
+    properties:
+      is_active:
+        type: boolean
+    type: object
+  models.UssdResponse:
+    properties:
+      responseType:
+        type: string
+      text:
+        type: string
+    type: object
+  models.VueTable:
+    properties:
+      client_id:
+        type: integer
+      download:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: integer
+      page:
+        type: integer
+      per_page:
+        type: integer
+      search:
+        type: string
+      sort:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+      user_type:
+        type: integer
+    type: object
+info:
+  contact:
+    email: tech@maybets.com
+    name: API Support
+    url: https://maybets.com/contact-us
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://maybets.com/terms
+paths:
+  /category:
+    get:
+      consumes:
+      - application/json
+      description: This API retrieves all SMS keyword categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Array of categories
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all SMS keyword categories
+      tags:
+      - admin - Categories
+    post:
+      consumes:
+      - application/json
+      description: This API creates a new SMS keyword category
+      parameters:
+      - description: Category Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Category'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create SMS keyword category
+      tags:
+      - admin - Categories
+  /category/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: This API deletes an SMS keyword category
+      parameters:
+      - description: SMS Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Category not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete SMS keyword category
+      tags:
+      - admin - Categories
+    patch:
+      consumes:
+      - application/json
+      description: This API updates the status of an SMS keyword category
+      parameters:
+      - description: Category Status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateStatus'
+      - description: SMS Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Category not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update SMS keyword category status
+      tags:
+      - admin - Categories
+    put:
+      consumes:
+      - application/json
+      description: This API updates an existing SMS keyword category
+      parameters:
+      - description: Category Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Category'
+      - description: SMS Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Category not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update SMS keyword category
+      tags:
+      - admin - Categories
+  /inbox:
+    post:
+      consumes:
+      - application/json
+      description: This API  receives incoming SMS,
+      parameters:
+      - description: Message Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Inbox'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: SMS processed successfully
+          schema:
+            $ref: '#/definitions/models.BetSuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "502":
+          description: Unable to communicate with other micro services
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: receives incoming SMS
+      tags:
+      - callback
+  /incoming/ussd:
+    post:
+      consumes:
+      - application/json
+      description: This API  receives ussd from Intouch Vas,
+      parameters:
+      - description: ussd Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.USSD'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: USSD processed successfully
+          schema:
+            $ref: '#/definitions/models.UssdResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "502":
+          description: Unable to communicate with other micro services
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: receives incoming ussd from Intouch Vas
+      tags:
+      - callback
+  /keyword:
+    get:
+      consumes:
+      - application/json
+      description: This API retrieves all SMS keywords
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Array of keywords
+          schema:
+            items:
+              $ref: '#/definitions/models.Keyword'
+            type: array
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all SMS keywords
+      tags:
+      - admin - Keywords
+    post:
+      consumes:
+      - application/json
+      description: This API creates a new SMS keyword
+      parameters:
+      - description: Keyword Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Keyword'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create SMS keyword
+      tags:
+      - admin - Keywords
+  /keyword/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: This API deletes an SMS keyword
+      parameters:
+      - description: SMS Keyword ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Keyword not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete SMS keyword
+      tags:
+      - admin - Keywords
+    patch:
+      consumes:
+      - application/json
+      description: This API updates the status of an SMS keyword
+      parameters:
+      - description: Keyword Status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateStatus'
+      - description: SMS Keyword ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Keyword not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update SMS keyword status
+      tags:
+      - admin - Keywords
+    put:
+      consumes:
+      - application/json
+      description: This API updates an existing SMS keyword
+      parameters:
+      - description: Keyword Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Keyword'
+      - description: SMS Keyword ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Keyword not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update SMS keyword
+      tags:
+      - admin - Keywords
+  /outcome/alias:
+    get:
+      consumes:
+      - application/json
+      description: This API gets all sms markets alias
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'MarketAlias array '
+          schema:
+            items:
+              $ref: '#/definitions/models.MarketAlias'
+            type: array
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Template not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get sms markets alias
+      tags:
+      - admin - markets
+    post:
+      consumes:
+      - application/json
+      description: This API creates  sms market alias
+      parameters:
+      - description: MarketAlias Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateMarketAlias'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ' created successfully'
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: create sms market alias
+      tags:
+      - admin - markets
+  /outcome/alias/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: This API deletes  sms market alias
+      parameters:
+      - description: SMS Alias ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ' deleted successfully'
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: delete sms market alias
+      tags:
+      - admin - markets
+    put:
+      consumes:
+      - application/json
+      description: This API updates  sms market alias
+      parameters:
+      - description: MarketAlias Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateMarketAlias'
+      - description: SMS Alias ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ' created successfully'
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update sms market alias
+      tags:
+      - admin - markets
+  /templates:
+    get:
+      consumes:
+      - application/json
+      description: This API sms templates used to send back responses to the customer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Templates array '
+          schema:
+            items:
+              $ref: '#/definitions/models.Template'
+            type: array
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Template not found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get sms templates
+      tags:
+      - admin - templates
+    put:
+      consumes:
+      - application/json
+      description: This API updates  sms templates
+      parameters:
+      - description: Template Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Template'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Settings created successfully
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid payload or missing field in the payload
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Authorization error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update sms templates
+      tags:
+      - admin - templates
+  /ussd/hope:
+    post:
+      consumes:
+      - application/json
+      description: Retrieves paginated, searchable USSD hope data with optional CSV
+        download
+      parameters:
+      - description: Vue table filter and pagination options
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.VueTable'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated USSD hopes or downloadable CSV
+          schema:
+            type: object
+        "400":
+          description: Invalid request body or parameters
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Fetch USSD hopes as a Vue-compatible table
+      tags:
+      - ussd
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: api-key
+    type: apiKey
+swagger: "2.0"

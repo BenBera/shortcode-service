@@ -1,0 +1,15 @@
+export PATH="$PATH:$(go env GOPATH)/bin"
+
+ protoc --go_out=./odds/ --go_opt=paths=source_relative --go-grpc_out=./odds/ --go-grpc_opt=paths=source_relative ./odds-service.proto
+
+ protoc --go_out=./identity/ --go_opt=paths=source_relative --go-grpc_out=./identity/ --go-grpc_opt=paths=source_relative ./identity-service.proto
+
+ protoc --go_out=./fixture/ --go_opt=paths=source_relative --go-grpc_out=./fixture/ --go-grpc_opt=paths=source_relative ./fixture-service.proto
+
+  protoc --go_out=./wallet/ --go_opt=paths=source_relative --go-grpc_out=./wallet/ --go-grpc_opt=paths=source_relative ./wallet-service.proto
+
+  protoc --go_out=./betting/ --go_opt=paths=source_relative --go-grpc_out=./betting/ --go-grpc_opt=paths=source_relative ./betting-service.proto
+
+  protoc --go_out=./jackpot/ --go_opt=paths=source_relative --go-grpc_out=./jackpot/ --go-grpc_opt=paths=source_relative ./jackpot-service.proto
+
+  protoc --go_out=./shortcode/ --go_opt=paths=source_relative --go-grpc_out=./shortcode/ --go-grpc_opt=paths=source_relative ./shortcode-service.proto

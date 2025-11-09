@@ -1,0 +1,1373 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "termsOfService": "https://maybets.com/terms",
+        "contact": {
+            "name": "API Support",
+            "url": "https://maybets.com/contact-us",
+            "email": "tech@maybets.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    },
+    "paths": {
+        "/category": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API retrieves all SMS keyword categories",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Categories"
+                ],
+                "summary": "Get all SMS keyword categories",
+                "responses": {
+                    "200": {
+                        "description": "Array of categories",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Category"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API creates a new SMS keyword category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Categories"
+                ],
+                "summary": "Create SMS keyword category",
+                "parameters": [
+                    {
+                        "description": "Category Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Category"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/category/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API updates an existing SMS keyword category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Categories"
+                ],
+                "summary": "Update SMS keyword category",
+                "parameters": [
+                    {
+                        "description": "Category Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Category"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "SMS Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API deletes an SMS keyword category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Categories"
+                ],
+                "summary": "Delete SMS keyword category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SMS Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API updates the status of an SMS keyword category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Categories"
+                ],
+                "summary": "Update SMS keyword category status",
+                "parameters": [
+                    {
+                        "description": "Category Status",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateStatus"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "SMS Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/inbox": {
+            "post": {
+                "description": "This API  receives incoming SMS,",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "callback"
+                ],
+                "summary": "receives incoming SMS",
+                "parameters": [
+                    {
+                        "description": "Message Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Inbox"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SMS processed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.BetSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Unable to communicate with other micro services",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/incoming/ussd": {
+            "post": {
+                "description": "This API  receives ussd from Intouch Vas,",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "callback"
+                ],
+                "summary": "receives incoming ussd from Intouch Vas",
+                "parameters": [
+                    {
+                        "description": "ussd Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.USSD"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "USSD processed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.UssdResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Unable to communicate with other micro services",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/keyword": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API retrieves all SMS keywords",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Keywords"
+                ],
+                "summary": "Get all SMS keywords",
+                "responses": {
+                    "200": {
+                        "description": "Array of keywords",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Keyword"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API creates a new SMS keyword",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Keywords"
+                ],
+                "summary": "Create SMS keyword",
+                "parameters": [
+                    {
+                        "description": "Keyword Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Keyword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/keyword/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API updates an existing SMS keyword",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Keywords"
+                ],
+                "summary": "Update SMS keyword",
+                "parameters": [
+                    {
+                        "description": "Keyword Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Keyword"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "SMS Keyword ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Keyword not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API deletes an SMS keyword",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Keywords"
+                ],
+                "summary": "Delete SMS keyword",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SMS Keyword ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Keyword not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API updates the status of an SMS keyword",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - Keywords"
+                ],
+                "summary": "Update SMS keyword status",
+                "parameters": [
+                    {
+                        "description": "Keyword Status",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateStatus"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "SMS Keyword ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Keyword not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/outcome/alias": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API gets all sms markets alias",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - markets"
+                ],
+                "summary": "Get sms markets alias",
+                "responses": {
+                    "200": {
+                        "description": "MarketAlias array ",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MarketAlias"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Template not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API creates  sms market alias",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - markets"
+                ],
+                "summary": "create sms market alias",
+                "parameters": [
+                    {
+                        "description": "MarketAlias Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateMarketAlias"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": " created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/outcome/alias/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API updates  sms market alias",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - markets"
+                ],
+                "summary": "Update sms market alias",
+                "parameters": [
+                    {
+                        "description": "MarketAlias Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateMarketAlias"
+                        }
+                    },
+                    {
+                        "type": "integer",
+                        "description": "SMS Alias ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": " created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API deletes  sms market alias",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - markets"
+                ],
+                "summary": "delete sms market alias",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SMS Alias ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": " deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/templates": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API sms templates used to send back responses to the customer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - templates"
+                ],
+                "summary": "Get sms templates",
+                "responses": {
+                    "200": {
+                        "description": "Templates array ",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Template"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Template not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "This API updates  sms templates",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin - templates"
+                ],
+                "summary": "Update sms templates",
+                "parameters": [
+                    {
+                        "description": "Template Details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Template"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Settings created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or missing field in the payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ussd/hope": {
+            "post": {
+                "description": "Retrieves paginated, searchable USSD hope data with optional CSV download",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ussd"
+                ],
+                "summary": "Fetch USSD hopes as a Vue-compatible table",
+                "parameters": [
+                    {
+                        "description": "Vue table filter and pagination options",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VueTable"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated USSD hopes or downloadable CSV",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or parameters",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.BetSuccessResponse": {
+            "type": "object",
+            "required": [
+                "bet_id",
+                "data",
+                "status"
+            ],
+            "properties": {
+                "bet_id": {
+                    "description": "BetID bet id that was created",
+                    "type": "string"
+                },
+                "data": {
+                    "description": "Message status description",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status http status code",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Category": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CreateMarketAlias": {
+            "type": "object",
+            "properties": {
+                "alias": {
+                    "description": "Alias custom alias",
+                    "type": "string"
+                },
+                "market_id": {
+                    "description": "MarketID market ID",
+                    "type": "integer"
+                },
+                "outcome_id": {
+                    "description": "OutcomeID market outcome ID",
+                    "type": "string"
+                },
+                "specifier": {
+                    "description": "Specifier market line specifier",
+                    "type": "string"
+                }
+            }
+        },
+        "models.ErrorResponse": {
+            "type": "object",
+            "required": [
+                "error_code",
+                "error_message"
+            ],
+            "properties": {
+                "error_code": {
+                    "description": "ErrorCode error status code",
+                    "type": "integer"
+                },
+                "error_message": {
+                    "description": "ErrorMessage status description",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Inbox": {
+            "type": "object",
+            "properties": {
+                "inbox_id": {
+                    "description": "InboxID id of the message",
+                    "type": "integer"
+                },
+                "message": {
+                    "description": "Message sms sent by user",
+                    "type": "string"
+                },
+                "msisdn": {
+                    "description": "Msisdn mobile number",
+                    "type": "string"
+                }
+            }
+        },
+        "models.Keyword": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "keyword": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.MarketAlias": {
+            "type": "object",
+            "properties": {
+                "alias": {
+                    "description": "Alias custom alias",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID",
+                    "type": "integer"
+                },
+                "market_id": {
+                    "description": "MarketID market ID",
+                    "type": "integer"
+                },
+                "market_name": {
+                    "description": "MarketName market name",
+                    "type": "string"
+                },
+                "outcome_id": {
+                    "description": "OutcomeID market outcome ID",
+                    "type": "string"
+                },
+                "specifier": {
+                    "description": "Specifier market line specifier",
+                    "type": "string"
+                }
+            }
+        },
+        "models.SuccessResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "status"
+            ],
+            "properties": {
+                "data": {
+                    "description": "Message status description",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status http status code",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Template": {
+            "type": "object",
+            "required": [
+                "content",
+                "name"
+            ],
+            "properties": {
+                "content": {
+                    "description": "Content content of the sms template",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name name of the sms template",
+                    "type": "string",
+                    "enum": [
+                        "JOIN",
+                        "HELP",
+                        "BALANCE_QUERY",
+                        "SMS_GAMES"
+                    ]
+                }
+            }
+        },
+        "models.USSD": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "ussd code",
+                    "type": "string"
+                },
+                "input": {
+                    "description": "INPUT",
+                    "type": "string"
+                },
+                "level": {
+                    "description": "level",
+                    "type": "integer"
+                },
+                "msisdn": {
+                    "description": "Msisdn mobile number",
+                    "type": "integer"
+                },
+                "network": {
+                    "description": "network",
+                    "type": "string"
+                },
+                "session": {
+                    "description": "user Session",
+                    "type": "string"
+                },
+                "text": {
+                    "description": "Message sms sent by user",
+                    "type": "string"
+                }
+            }
+        },
+        "models.UpdateStatus": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.UssdResponse": {
+            "type": "object",
+            "properties": {
+                "responseType": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.VueTable": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "integer"
+                },
+                "download": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_type": {
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "api-key",
+            "in": "header"
+        }
+    }
+}
