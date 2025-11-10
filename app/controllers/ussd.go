@@ -174,11 +174,14 @@ func (controller *Controller) handleFirstLevelKey(ctx context.Context, session s
 		return controller.handleKeyMinusOne(ctx, session, msisdn, userResponse, firstlevelKey)
 	case 0:
 		return controller.handleKeyZero(ctx, session, msisdn, firstlevelKey, codeRequest)
+	case -4:
+		return controller.handleKeyMinusFour(ctx, session, msisdn, userResponse, firstlevelKey)
 	default:
 		return models.UssdResponse{"Invalid key value.", "END"}, nil
 	}
 }
 
+// requet otp
 func (controller *Controller) handleKeyMinusThree(ctx context.Context, session string, userResponse string, firstlevelKey string, codeRequest *identity.CodeRequest) (models.UssdResponse, error) {
 
 	cacheDuration := 5 * time.Minute
@@ -195,71 +198,24 @@ func (controller *Controller) handleKeyMinusThree(ctx context.Context, session s
 
 }
 
+// referral sub menu
 func (controller *Controller) handleKeyMinusTwo(ctx context.Context, session string, msisdn int64, userResponse string, firstlevelKey string) (models.UssdResponse, error) {
 	if len(userResponse) < 3 {
-		return models.UssdResponse{"Referral code should be greater than three characters", "END"}, nil
+		return models.UssdResponse{Text: "Referral code should be greater than three characters", ResponseType: "END"}, nil
 	}
 
-	firstresponse := models.UssdResponse{MAINRESPONSE, "CON"}
+	firstresponse := models.UssdResponse{Text: MAINRESPONSE, ResponseType: "CON"}
 
 	return firstresponse, nil
 }
 
+// registration
 func (controller *Controller) handleKeyMinusOne(ctx context.Context, session string, msisdn int64, userResponse string, firstlevelKey string) (models.UssdResponse, error) {
 	firstresponse := models.UssdResponse{MAINRESPONSE, "CON"}
 	cacheDuration := 5 * time.Minute
 	if userResponse == "1" {
-		userprof := identity.NewUser{
-			Msisdn: msisdn,
-		}
-
-		identityResponse, err := controller.IdentityServiceClient.CreateUser(ctx, &userprof)
-		if err != nil {
-			logrus.WithContext(ctx).
-				WithFields(logrus.Fields{
-					constants.DESCRIPTION: "Failed to create user",
-					constants.DATA:        err,
-				}).
-				Error(err.Error())
-
-			firstresponse = models.UssdResponse{"Failed to create user. Try again later", "END"}
-			return firstresponse, nil
-		}
-
-		log.Printf("Here is the ProfileId %d", identityResponse.Profile.Id)
-		log.Printf("Here is the status %d", identityResponse.Profile.Status)
-
-		prfstatus := identityResponse.Profile.Status
-		prfid := identityResponse.Profile.Id
-		if prfstatus == -1 {
-			prfstatus = 1
-
-			changeSt := identity.StatusRequest{
-				Status:    int32(prfstatus),
-				ProfileID: int32(prfid),
-			}
-
-			changeStatus, err := controller.IdentityServiceClient.ChangeStatus(ctx, &changeSt)
-			if err != nil {
-				logrus.WithContext(ctx).
-					WithFields(logrus.Fields{
-						constants.DESCRIPTION: "Failed To update User",
-						constants.DATA:        &changeSt,
-					}).
-					Error(err.Error())
-
-				firstresponse = models.UssdResponse{"Failed to create user. Try again later", "END"}
-				return firstresponse, nil
-			}
-
-			identityResponse.Profile.Id = int64(changeStatus.ProfileID)
-
-			profilekey := fmt.Sprintf("profid:%v", session)
-			profid := fmt.Sprintf("%v", identityResponse.Profile.Id)
-			library.SetRedisKeyWithExpiry(controller.RedisConn, profilekey, profid, int(cacheDuration.Seconds()))
-		}
-
-		library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "1", int(cacheDuration.Seconds()))
+		firstresponse = models.UssdResponse{Text: "Enter Password to match xxxx requirements.", ResponseType: "CON"}
+		library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-4", int(cacheDuration.Seconds()))
 	} else if userResponse == "2" {
 		firstresponse = models.UssdResponse{"Enter Referral CODE.", "CON"}
 		library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-2", int(cacheDuration.Seconds()))
@@ -269,12 +225,40 @@ func (controller *Controller) handleKeyMinusOne(ctx context.Context, session str
 	return firstresponse, nil
 }
 
+// passowrd sub menu
+func (controller *Controller) handleKeyMinusFour(ctx context.Context, session string, msisdn int64, userResponse string, firstlevelKey string) (models.UssdResponse, error) {
+	firstresponse := models.UssdResponse{Text: MAINRESPONSE, ResponseType: "CON"}
+	//regex check to match password requirements
+	if len(userResponse) < 3 {
+		return models.UssdResponse{Text: "Password does no meet requirements", ResponseType: "END"}, nil
+	}
+
+	endpoint := "https://9ubet.co.ke/api/userRegByMobile"
+	payload := models.UserRegByMobileRequest{
+		Mobile:   strconv.FormatInt(msisdn, 10),
+		VKey:     "",
+		VCode:    "",
+		Password: userResponse, //determine which fields are required
+		TGCode:   "",
+		TID:      "",
+		DeviceID: "",
+		AC:       "userRegByMobile",
+	}
+	status, _ := goutils.HTTPPost(endpoint, nil, payload)
+	if status != 200 {
+		firstresponse = models.UssdResponse{Text: "Failed to create account. Try again later", ResponseType: "END"}
+		return firstresponse, nil
+	}
+
+	return firstresponse, nil
+}
 func (controller *Controller) handleKeyZero(ctx context.Context, session string, msisdn int64, firstlevelKey string, codeRequest *identity.CodeRequest) (models.UssdResponse, error) {
 	cacheDuration := 5 * time.Minute
 	profilekey := fmt.Sprintf("profid:%v", session)
 	profid, err := library.GetRedisKey(controller.RedisConn, profilekey)
 	firstresponse := models.UssdResponse{MAINRESPONSE, "CON"}
 	if err != nil {
+		//we need a way to check if user exists else we direct  them to account creation
 		usermsisdn := identity.Msisdn{
 			Msisdn: msisdn,
 		}
