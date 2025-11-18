@@ -2,9 +2,10 @@ package library
 
 import (
 	"fmt"
-	"github.com/go-redis/redis"
 	"log"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 func GetRedisKey(conn *redis.Client, key string) (string, error) {
@@ -78,18 +79,18 @@ func IncRedisKey(conn *redis.Client, key string) (int64, error) {
 }
 
 func DeleteRedisKey(conn *redis.Client, key string) error {
-    // Attempt to delete the key from Redis
-    result, err := conn.Del(key).Result()
-    if err != nil {
-        return fmt.Errorf("error deleting key %s: %v", key, err)
-    }
+	// Attempt to delete the key from Redis
+	result, err := conn.Del(key).Result()
+	if err != nil {
+		return fmt.Errorf("error deleting key %s: %v", key, err)
+	}
 
-    // Check if the key was actually deleted
-    if result == 0 {
-        log.Printf("key %s was not found in Redis", key)
-    } else {
-        log.Printf("key %s deleted successfully", key)
-    }
+	// Check if the key was actually deleted
+	if result == 0 {
+		log.Printf("key %s was not found in Redis", key)
+	} else {
+		log.Printf("key %s deleted successfully", key)
+	}
 
-    return nil
+	return nil
 }

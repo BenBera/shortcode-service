@@ -3,10 +3,11 @@ package library
 import (
 	"context"
 	"encoding/json"
+	"log"
+
 	"github.com/BenBera/shortcode-service/app/constants"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
-	"log"
 )
 
 func Publish(ctx context.Context, conn *amqp.Connection, name string, payload interface{}, priority uint8) error {

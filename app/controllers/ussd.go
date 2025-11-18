@@ -12,16 +12,12 @@ import (
 	"os"
 
 	"github.com/BenBera/shortcode-service/app/constants"
-	fx "github.com/BenBera/shortcode-service/app/grpc/fixture"
-	"github.com/BenBera/shortcode-service/app/grpc/jackpot"
-	"github.com/BenBera/shortcode-service/app/grpc/wallet"
+
 	"github.com/BenBera/shortcode-service/app/library"
 	"github.com/BenBera/shortcode-service/app/models"
 	"github.com/labstack/echo/v4"
 	goutils "github.com/mudphilo/go-utils"
 	"github.com/sirupsen/logrus"
-
-	"github.com/BenBera/shortcode-service/app/grpc/identity"
 
 	"github.com/labstack/gommon/log"
 
@@ -41,7 +37,7 @@ var INVALID_INPUT = models.UssdResponse{
 	ResponseType: "END",
 }
 
-const MAINRESPONSE = "Karibu Maybets:\n1. Top games\n2. Jackpot\n3. Deposit/withdraw\n4. My account\n5. Customer Care \n6. Exit"
+const MAINRESPONSE = "Karibu 9UBet:\n1. Top games\n\n2. Deposit/withdraw\n3. My account\n4. Customer Care \n5. Exit"
 
 func (controller *Controller) IncomingUSSD(c echo.Context) error {
 
@@ -66,10 +62,6 @@ func (controller *Controller) IncomingUSSD(c echo.Context) error {
 
 	//register user if not existing
 	t0 := time.Now().UnixMilli()
-
-	usermsisdn := identity.Msisdn{
-		Msisdn: msisdn,
-	}
 
 	t1 := time.Now().UnixMilli()
 	log.Printf("time to save %dms ", t1-t0)
@@ -127,16 +119,16 @@ func (controller *Controller) IncomingUSSD(c echo.Context) error {
 	}
 
 	profilekey := fmt.Sprintf("profid:%v", session)
-	profid, err := library.GetRedisKey(controller.RedisConn, profilekey)
-	if err != nil {
-		userprofile, err := controller.IdentityServiceClient.GetProfileByMsisdn(ctx, &usermsisdn)
-		if err != nil {
-			firstresponse := models.UssdResponse{"Session failed. Try again later", "END"}
-			return RespondRaw(c, http.StatusOK, firstresponse)
-
-		}
-		profid = fmt.Sprintf("%v", userprofile.Id)
-	}
+	profid, _ := library.GetRedisKey(controller.RedisConn, profilekey)
+	//if err != nil {
+	//	userprofile, err := controller.IdentityServiceClient.GetProfileByMsisdn(ctx, &usermsisdn)
+	//	if err != nil {
+	//		firstresponse := models.UssdResponse{"Session failed. Try again later", "END"}
+	//		return RespondRaw(c, http.StatusOK, firstresponse)
+	//
+	//	}
+	//	profid = fmt.Sprintf("%v", userprofile.Id)
+	//}
 	profileid, _ := strconv.ParseInt(profid, 10, 64)
 	log.Printf("the profile id is %v", profileid)
 	response := controller.Ussdflow(ctx, userResponse, level, profileid, session, msisdn, ipAddress)
@@ -161,42 +153,38 @@ func (controller *Controller) handleFirstLevelKey(ctx context.Context, session s
 	key1, er1 := controller.getLevelFromRedis(firstlevelKey)
 	log.Printf("first error is %v AND key is %v", er1, key1)
 
-	codeRequest := &identity.CodeRequest{
-		Msisdn: msisdn,
-	}
-
 	switch key1 {
-	case -3:
-		return controller.handleKeyMinusThree(ctx, session, userResponse, firstlevelKey, codeRequest)
+	//case -3:
+	//	return controller.handleKeyMinusThree(ctx, session, userResponse, firstlevelKey, codeRequest)
 	case -2:
 		return controller.handleKeyMinusTwo(ctx, session, msisdn, userResponse, firstlevelKey)
 	case -1:
 		return controller.handleKeyMinusOne(ctx, session, msisdn, userResponse, firstlevelKey)
 	case 0:
-		return controller.handleKeyZero(ctx, session, msisdn, firstlevelKey, codeRequest)
+		return controller.handleKeyZero(ctx, session, msisdn, firstlevelKey)
 	case -4:
 		return controller.handleKeyMinusFour(ctx, session, msisdn, userResponse, firstlevelKey)
 	default:
-		return models.UssdResponse{"Invalid key value.", "END"}, nil
+		return models.UssdResponse{Text: "Invalid key value.", ResponseType: "END"}, nil
 	}
 }
 
-// requet otp
-func (controller *Controller) handleKeyMinusThree(ctx context.Context, session string, userResponse string, firstlevelKey string, codeRequest *identity.CodeRequest) (models.UssdResponse, error) {
-
-	cacheDuration := 5 * time.Minute
-	response, err := controller.IdentityServiceClient.RequestCode(ctx, codeRequest)
-	ussdtext := "An error occurred while processing your request. Please try again later."
-	ussdresponse := "END"
-	if err == nil {
-		ussdtext = response.Description + "\nVisit www.maybets.com/Maybets APP to complete your Registration"
-		ussdresponse = "CON"
-	}
-	firstresponse := models.UssdResponse{ussdtext, ussdresponse}
-	library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-3", int(cacheDuration.Seconds()))
-	return firstresponse, nil
-
-}
+//// request otp
+//func (controller *Controller) handleKeyMinusThree(ctx context.Context, session string, userResponse string, firstlevelKey string) (models.UssdResponse, error) {
+//
+//	cacheDuration := 5 * time.Minute
+//	response, err := controller.IdentityServiceClient.RequestCode(ctx, codeRequest)
+//	ussdtext := "An error occurred while processing your request. Please try again later."
+//	ussdresponse := "END"
+//	if err == nil {
+//		ussdtext = response.Description + "\nVisit www.maybets.com/Maybets APP to complete your Registration"
+//		ussdresponse = "CON"
+//	}
+//	firstresponse := models.UssdResponse{ussdtext, ussdresponse}
+//	library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-3", int(cacheDuration.Seconds()))
+//	return firstresponse, nil
+//
+//}
 
 // referral sub menu
 func (controller *Controller) handleKeyMinusTwo(ctx context.Context, session string, msisdn int64, userResponse string, firstlevelKey string) (models.UssdResponse, error) {
@@ -252,39 +240,40 @@ func (controller *Controller) handleKeyMinusFour(ctx context.Context, session st
 
 	return firstresponse, nil
 }
-func (controller *Controller) handleKeyZero(ctx context.Context, session string, msisdn int64, firstlevelKey string, codeRequest *identity.CodeRequest) (models.UssdResponse, error) {
+
+func (controller *Controller) handleKeyZero(ctx context.Context, session string, msisdn int64, firstlevelKey string) (models.UssdResponse, error) {
 	cacheDuration := 5 * time.Minute
 	profilekey := fmt.Sprintf("profid:%v", session)
 	profid, err := library.GetRedisKey(controller.RedisConn, profilekey)
-	firstresponse := models.UssdResponse{MAINRESPONSE, "CON"}
+	firstresponse := models.UssdResponse{Text: MAINRESPONSE, ResponseType: "CON"}
 	if err != nil {
 		//we need a way to check if user exists else we direct  them to account creation
-		usermsisdn := identity.Msisdn{
-			Msisdn: msisdn,
-		}
-		userprofile, err := controller.IdentityServiceClient.GetProfileByMsisdn(ctx, &usermsisdn)
-		if err != nil {
-			firstresponsenew := models.UssdResponse{"Karibu Maybets to complete Registration Press 1 or 2 to accept Terms and conditions at maybets.com/terms-and-condition\n\n1.Join\n2.Join using Referral code ", "CON"}
-			library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-1", int(cacheDuration.Seconds()))
-			return firstresponsenew, nil
-		}
+		//    usermsisdn := identity.Msisdn{
+		//	Msisdn: msisdn,
+		//}
+		//userprofile, err := controller.IdentityServiceClient.GetProfileByMsisdn(ctx, &usermsisdn)
+		//if err != nil {
+		//	firstresponsenew := models.UssdResponse{"Karibu Maybets to complete Registration Press 1 or 2 to accept Terms and conditions at maybets.com/terms-and-condition\n\n1.Join\n2.Join using Referral code ", "CON"}
+		//	library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-1", int(cacheDuration.Seconds()))
+		//	return firstresponsenew, nil
+		//}
 
 		log.Printf("no first key")
 
-		if userprofile.Status == -1 {
-			response, err := controller.IdentityServiceClient.RequestCode(ctx, codeRequest)
-			ussdtext := "An error occurred while processing your request. Please try again later."
-			ussdresponse := "END"
-			if err == nil {
-				ussdtext = response.Description + "\nVisit www.maybets.com/Maybets APP to complete your Registration"
-				ussdresponse = "CON"
-			}
-			firstresponse = models.UssdResponse{ussdtext, ussdresponse}
-			library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-3", int(cacheDuration.Seconds()))
-		} else {
-			library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "1", int(cacheDuration.Seconds()))
-		}
-		profid = fmt.Sprintf("%v", userprofile.Id)
+		//if userprofile.Status == -1 {
+		//	response, err := controller.IdentityServiceClient.RequestCode(ctx, codeRequest)
+		//	ussdtext := "An error occurred while processing your request. Please try again later."
+		//	ussdresponse := "END"
+		//	if err == nil {
+		//		ussdtext = response.Description + "\nVisit www.maybets.com/Maybets APP to complete your Registration"
+		//		ussdresponse = "CON"
+		//	}
+		//	firstresponse = models.UssdResponse{ussdtext, ussdresponse}
+		//	library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-3", int(cacheDuration.Seconds()))
+		//} else {
+		library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-4", int(cacheDuration.Seconds()))
+		//}
+		//profid = fmt.Sprintf("%v", userprofile.Id)
 		library.SetRedisKeyWithExpiry(controller.RedisConn, profilekey, profid, int(cacheDuration.Seconds()))
 	}
 
@@ -333,24 +322,21 @@ func (controller *Controller) Ussdflow(ctx context.Context, userResponse string,
 		return controller.GetUSSDGames(ctx, profileID, session, 50, userResponse, msisdn, ipAddress)
 
 	} else if level == 2 {
-		return controller.GetJackpotUSSD(ctx, profileID, session, userResponse, msisdn, ipAddress)
-
-	} else if level == 3 {
 
 		//deposit and withdraw
 
 		return controller.depositwithdraw(ctx, profileID, msisdn, session, userResponse)
 
-	} else if level == 4 {
+	} else if level == 3 {
 
 		return controller.account(ctx, profileID, msisdn, session, userResponse)
 
-	} else if level == 5 {
+	} else if level == 4 {
 		ussdtext = "For assistance, contact Customer Care:Call: +254701001000 WhatsApp: +254704498098. Thank you!"
 		ussdresponse = "END"
 
 	} else {
-		ussdtext = "Thank you for using Maybets USSD. Good luck and see you next time!"
+		ussdtext = "Thank you for using 9UBet USSD. Good luck and see you next time!"
 		ussdresponse = "END"
 
 	}
@@ -391,38 +377,38 @@ func (controller *Controller) GetUSSDGames(ctx context.Context, profileID int64,
 
 	// If Redis data is empty or expired, fetch from the database
 	if len(games) == 0 {
-		lastPriority := 0
-		data := fx.RequestSMSGame{
-			Count:        int64(count),
-			FromPriority: int64(lastPriority),
-		}
-
-		response, err := controller.FixtureServiceClient.GetSMSGames(ctx, &data)
-
-		if err != nil {
-			logrus.WithContext(ctx).
-				WithFields(logrus.Fields{
-					"DESCRIPTION": "Failed to get games from fixture service",
-					"DATA":        &data,
-				}).
-				Error(err.Error())
-			return models.UssdResponse{
-				Text:         "Welcome to Maybets where winners are made",
-				ResponseType: "END",
-			}
-		}
-
-		// Convert response.Games (slice of pointers to fixture.SMSGame) to slice of UssdGame
-		for _, smsGame := range response.Games {
-			games = append(games, ConvertSMSGameToUssdGame(*smsGame))
-		}
-
-		// Store games in Redis
-		gamesData, err := json.Marshal(games)
-		if err == nil {
-			controller.setLevelInRedis(key, string(gamesData), cacheDuration)
-
-		}
+		//	lastPriority := 0
+		//data := fx.RequestSMSGame{
+		//	Count:        int64(count),
+		//	FromPriority: int64(lastPriority),
+		//}
+		//
+		//response, err := controller.FixtureServiceClient.GetSMSGames(ctx, &data)
+		//
+		//if err != nil {
+		//	logrus.WithContext(ctx).
+		//		WithFields(logrus.Fields{
+		//			"DESCRIPTION": "Failed to get games from fixture service",
+		//			"DATA":        &data,
+		//		}).
+		//		Error(err.Error())
+		//	return models.UssdResponse{
+		//		Text:         "Welcome to Maybets where winners are made",
+		//		ResponseType: "END",
+		//	}
+		//}
+		//
+		//// Convert response.Games (slice of pointers to fixture.SMSGame) to slice of UssdGame
+		//for _, smsGame := range response.Games {
+		//	games = append(games, ConvertSMSGameToUssdGame(*smsGame))
+		//}
+		//
+		//// Store games in Redis
+		//gamesData, err := json.Marshal(games)
+		//if err == nil {
+		//	controller.setLevelInRedis(key, string(gamesData), cacheDuration)
+		//
+		//}
 	}
 
 	//  place bet
@@ -472,19 +458,19 @@ func (controller *Controller) GetUSSDGames(ctx context.Context, profileID int64,
 		betslipString := strings.Join(betslipParts, "#")
 		message := fmt.Sprintf("%s#%d", betslipString, amount)
 
-		message, err = controller.ussdBet(ctx, profileID, message, ipAddress)
-		if err == nil {
-			// Clear the betslip by deleting the Redis key
-			err := library.DeleteRedisKey(controller.RedisConn, betslipKey)
-			if err != nil {
-				logrus.WithContext(ctx).
-					WithFields(logrus.Fields{
-						"DESCRIPTION": "Error clearing betslip from redis",
-						"DATA":        betslipKey,
-					}).
-					Error(err.Error())
-			}
-		}
+		//message, err = controller.ussdBet(ctx, profileID, message, ipAddress)
+		//if err == nil {
+		//	// Clear the betslip by deleting the Redis key
+		//	err := library.DeleteRedisKey(controller.RedisConn, betslipKey)
+		//	if err != nil {
+		//		logrus.WithContext(ctx).
+		//			WithFields(logrus.Fields{
+		//				"DESCRIPTION": "Error clearing betslip from redis",
+		//				"DATA":        betslipKey,
+		//			}).
+		//			Error(err.Error())
+		//	}
+		//}
 
 		// Return the USSD response with the message
 		return models.UssdResponse{
@@ -703,17 +689,17 @@ func (controller *Controller) GetUSSDGames(ctx context.Context, profileID int64,
 	}
 }
 
-func ConvertSMSGameToUssdGame(smsGame fx.SMSGame) models.UssdGame {
-	return models.UssdGame{
-		GameID:   int(smsGame.GameID),
-		Name:     smsGame.Name,
-		Date:     smsGame.Date,
-		Priority: int(smsGame.Priority),
-		Home:     smsGame.Home,
-		Away:     smsGame.Away,
-		Draw:     smsGame.Draw,
-	}
-}
+//func ConvertSMSGameToUssdGame(smsGame fx.SMSGame) models.UssdGame {
+//	return models.UssdGame{
+//		GameID:   int(smsGame.GameID),
+//		Name:     smsGame.Name,
+//		Date:     smsGame.Date,
+//		Priority: int(smsGame.Priority),
+//		Home:     smsGame.Home,
+//		Away:     smsGame.Away,
+//		Draw:     smsGame.Draw,
+//	}
+//}
 
 func (controller *Controller) Addtobetslip(ctx context.Context, profileID int64, game models.UssdGame, action string, level int) string {
 	// Generate Redis key for betslip
@@ -799,106 +785,6 @@ func (controller *Controller) Addtobetslip(ctx context.Context, profileID int64,
 	return msg
 }
 
-// get jackpot games on USSD
-func (controller *Controller) GetJackpotUSSD(ctx context.Context, profileID int64, session string, action string, msisdn int64, ipAddress string) models.UssdResponse {
-
-	jplevelKey := fmt.Sprintf("JACKPOT_LEVEL:%s:%d", session, profileID)
-	cacheDuration := 10 * time.Minute
-
-	// Retrieve and parse level from Redis
-	level, err := controller.getLevelFromRedis(jplevelKey)
-	if err != nil {
-		level = 0
-	}
-
-	log.Printf("jp ussd level is %v and action is %v", level, action)
-	// Handle "00" action to reset the game and return to the main menu
-	if action == "00" {
-		controller.resetGame(ctx, jplevelKey, level, session, msisdn)
-		return controller.Ussdflow(ctx, "", 0, profileID, session, msisdn, ipAddress)
-	}
-
-	// Handle level 0 cases
-	jackpotCategoryID := controller.getJackpotCategoryID(level)
-	if level == 0 {
-		controller.setLevelInRedis(jplevelKey, "1", cacheDuration)
-		return models.UssdResponse{
-			Text:         "Jackpot Games\n1. Weekly Jackpot\n2. Daily Jackpot.\n00. Main Menu",
-			ResponseType: "CON",
-		}
-	} else if level == 1 {
-		if action == "1" || action == "2" {
-			updatelevel := "1" + action
-			controller.setLevelInRedis(jplevelKey, updatelevel, cacheDuration)
-			return models.UssdResponse{
-				Text:         "1. Manual\n2. Autopick.\n 0. Back \n00. Main Menu",
-				ResponseType: "CON",
-			}
-		}
-	} else if level == 11 || level == 12 {
-		if action == "1" {
-
-			updatelevel := strconv.Itoa(level) + action
-			controller.setLevelInRedis(jplevelKey, updatelevel, cacheDuration)
-			return controller.GetJackpotUSSD(ctx, profileID, session, action, msisdn, ipAddress)
-		} else if action == "2" {
-
-			//bet autopick
-			text := "Please confirm press 1 to autobet\n1.Confirm\n0.Back"
-			controller.setLevelInRedis(jplevelKey, "10", cacheDuration)
-
-			return models.UssdResponse{
-				Text:         text,
-				ResponseType: "CON",
-			}
-
-		}
-
-	} else if level == 10 {
-		text := "Please confirm press 1 to autobet\n1.Confirm\n00.Back"
-		ResponseType := "END"
-		if action == "1" {
-
-			jpRes, err := controller.JackpotServiceClient.AutoPick(ctx, &jackpot.AutoPickRequest{
-				ProfileID: profileID,
-				Stake:     float32(0),
-				IpAddress: ipAddress,
-				JackpotID: jackpotCategoryID,
-			})
-
-			if err != nil {
-
-				jpname := "Weekly Jackpot"
-				if jackpotCategoryID == 5 {
-					jpname = "Daily Jackpot"
-				}
-
-				text = fmt.Sprintf("No %v games are available at the moment. Please try again later. Thank you for choosing Maybets!", jpname)
-			} else {
-				text = jpRes.Description
-				ResponseType = "CON"
-			}
-
-		}
-		return models.UssdResponse{
-			Text:         text,
-			ResponseType: ResponseType,
-		}
-	}
-
-	// Store updated level and proceed to display games
-	if level > 12 {
-		newLevel := strconv.Itoa(level)
-		controller.setLevelInRedis(jplevelKey, newLevel, cacheDuration)
-		return controller.GetJpgames(ctx, profileID, session, action, jackpotCategoryID, msisdn, jplevelKey, ipAddress)
-	}
-
-	return models.UssdResponse{
-		Text:         "Invalid selection. Please try again.",
-		ResponseType: "END",
-	}
-}
-
 // Get and parse level from Redis
 func (controller *Controller) getLevelFromRedis(jplevelKey string) (int, error) {
 	levelData, err := library.GetRedisKey(controller.RedisConn, jplevelKey)
@@ -947,125 +833,6 @@ func (controller *Controller) getJackpotCategoryID(level int) int64 {
 func (controller *Controller) getCategoryID(envVar string) int64 {
 	categoryID, _ := strconv.ParseInt(os.Getenv(envVar), 10, 64)
 	return categoryID
-}
-
-// Get Jackpot games
-func (controller *Controller) GetJpgames(ctx context.Context, profileID int64, session string, action string, categoryID int64, msisdn int64, jplevelKey string, ipAddress string) models.UssdResponse {
-
-	// Redis keys
-	sessionid := fmt.Sprintf("USSD:%s:%d", session, profileID)
-	sessionkey := fmt.Sprintf("USSD:%d:%d", categoryID, profileID)
-	key := fmt.Sprintf("USSD_JP:%d:%d", categoryID, profileID)
-	betslipKey := fmt.Sprintf("USSD_JP_betslip:%d:%d", categoryID, profileID)
-	headerKey := fmt.Sprintf("USSD_JP_header:%d:%d", categoryID, profileID)
-	pageKey := fmt.Sprintf("USSD_JP_PAGE:%d:%d", categoryID, profileID)
-	var processed string
-
-	currentPage, games, jackpotHeader := controller.retrieveGameData(key, headerKey, pageKey)
-
-	session_ussd, _ := library.GetRedisKey(controller.RedisConn, sessionkey)
-	if session_ussd != sessionid {
-		library.SetRedisKeyWithExpiry(controller.RedisConn, sessionkey, sessionid, 900)
-		action = "999"
-	}
-
-	if len(games) == 0 {
-
-		dt := jackpot.JackpotGamesRequest{
-			CategoryID: categoryID,
-		}
-
-		jpgames, err := controller.JackpotServiceClient.JpGames(ctx, &dt)
-		if err != nil {
-
-			return models.UssdResponse{
-				Text:         "Jackpot games are currently unavailable. Please check again later.",
-				ResponseType: "END",
-			}
-
-		}
-
-		if len(jpgames.Games) == 0 {
-			jpname := "Weekly Jackpot"
-			if categoryID == 5 {
-				jpname = "Daily Jackpot"
-			}
-			return models.UssdResponse{
-				Text:         fmt.Sprintf("Sorry we do not have active %v at the moment. Please keep checking for a surprise", jpname),
-				ResponseType: "END",
-			}
-
-		}
-
-		// jackpotgames := "DAILY JACKPOT GAMES\nDATE 21/08/24\nCLOSING TIME 5:55 PM\n--\nCeramica Cleopatra vs ZED FC\n1= 2.85 | X= 3.00 | 2= 2.90\n--\nIsmaily vs Smouha\n1= 2.90 | X= 3.10 | 2= 2.80\n--\nBruk-Bet Termalica Nieciecza vs. Wisla Plock\n1= 2.13 | X= 3.45 | 2= 3.15\n--\nVendsyssel FF vs. Hobro IK\n1= 2.25 | X= 3.85 | 2= 3.05\n--\nMalmo FF vs. Sparta Prague\n1= 2.30 | X= 3.55 | 2= 3.20\n--\nFC Dynamo Kyiv vs. FC Salzburg\n1= 2.95 | X= 3.75 | 2= 2.34\n--\nFC Pyunik Yerevan vs. NK Celje\n1= 2.44 | X= 3.35 | 2= 2.95\n--\nFK Panevezys vs. The New Saints FC\n1= 2.47 | X= 3.50 | 2= 2.80\n--\nFK Rigas Futbola Skola vs. APOEL Nikosia\n1= 2.55 | X= 3.50 | 2= 2.65\n--\nKI Klaksvik vs. HJK Helsinki\n1= 2.43 | X= 3.35 | 2= 2.95\n--\nSEND DJP#YOUR PICKS to 29098 to place a bet\nT&Cs Apply"
-		lines := strings.Split(jpgames.Games, "\n")
-		var headerLines []string
-		var gamesList []string
-
-		for i := 0; i < len(lines)-1; i++ {
-			line := strings.TrimSpace(lines[i])
-
-			// Check for game line with "vs"
-			if strings.Contains(line, "vs") {
-				if i+1 < len(lines) {
-					oddsLine := strings.TrimSpace(lines[i+1])
-					oddsParts := strings.Split(oddsLine, "|")
-					if len(oddsParts) == 3 &&
-						strings.HasPrefix(strings.TrimSpace(oddsParts[0]), "=") &&
-						strings.HasPrefix(strings.TrimSpace(oddsParts[1]), "=") &&
-						strings.HasPrefix(strings.TrimSpace(oddsParts[2]), "=") {
-
-						game := fmt.Sprintf("%s\n1= %s | X= %s | 2= %s",
-							line,
-							strings.TrimSpace(strings.TrimPrefix(oddsParts[0], "=")),
-							strings.TrimSpace(strings.TrimPrefix(oddsParts[1], "=")),
-							strings.TrimSpace(strings.TrimPrefix(oddsParts[2], "=")),
-						)
-						gamesList = append(gamesList, game)
-						i++ // Skip odds line
-					}
-				}
-			} else if len(gamesList) == 0 {
-				headerLines = append(headerLines, line)
-			}
-		}
-
-		// Save parsed games and header
-		games = gamesList
-		header := strings.Join(headerLines, "\n")
-
-		gamesData, _ := json.Marshal(games)
-		library.SetRedisKeyWithExpiry(controller.RedisConn, key, string(gamesData), 900)
-		library.SetRedisKeyWithExpiry(controller.RedisConn, headerKey, header, 900)
-		jackpotHeader = header
-		currentPage = 0
-	}
-
-	log.Printf("currentpage  now here %v and category id  is %v and games length %v", currentPage, categoryID, len(games))
-
-	if currentPage > 0 && currentPage <= len(games) && controller.isValidAction(action) {
-		controller.updateBetslip(betslipKey, action)
-	} else if !controller.isValidAction(action) {
-		if currentPage != 0 {
-			currentPage--
-		}
-
-	}
-
-	if currentPage >= len(games) {
-		if currentPage > len(games) {
-			return controller.handleEndOfjpGames(ctx, categoryID, action, profileID, session, msisdn, ipAddress, pageKey, betslipKey, jplevelKey, headerKey, key)
-		}
-		betslipData, _ := library.GetRedisKey(controller.RedisConn, betslipKey)
-		processedBetslip := strings.ReplaceAll(betslipData, "2", "X")
-		processedBetslip = strings.ReplaceAll(processedBetslip, "3", "2")
-		processed = fmt.Sprintf("Your selections are:\n%s\n1. Place bet\n2. Clear BetSlip", processedBetslip)
-	} else {
-		processed = controller.generateGameDisplay(games, jackpotHeader, currentPage, categoryID)
-	}
-
-	controller.updatePageInRedis(pageKey, currentPage)
-	return models.UssdResponse{Text: processed, ResponseType: "CON"}
 }
 
 // Check if the action is valid
@@ -1170,46 +937,6 @@ func (controller *Controller) generateGameDisplay(games []string, jackpotHeader 
 		match,
 		strings.Join(formattedOdds, "\n"),
 	)
-}
-
-// Handle end of game options
-func (controller *Controller) handleEndOfjpGames(ctx context.Context, categoryID int64, action string, profileID int64, session string, msisdn int64, ipAddress string, pageKey, betslipKey, jplevelKey, headerKey, key string) models.UssdResponse {
-	betslipData, _ := library.GetRedisKey(controller.RedisConn, betslipKey)
-	if action == "1" {
-		// Continue to place bet
-		// Process betslipData: replace "2" with "X", "3" with "2", and remove commas
-		message := strings.ReplaceAll(betslipData, "2", "X")
-		message = strings.ReplaceAll(message, "3", "2")
-		message = strings.ReplaceAll(message, ",", "")
-		message = strings.TrimSpace(message)
-		message = strings.ReplaceAll(message, " ", "")
-
-		jpRes, err := controller.JackpotServiceClient.AliasPick(ctx, &jackpot.AliasPickRequest{
-			ProfileID: profileID,
-			Stake:     0,
-			IpAddress: ipAddress,
-			JackpotID: categoryID,
-			Alias:     message,
-			//source to do constants.USSDSOURCE
-		})
-
-		if err != nil {
-
-			log.Printf("error placing user pick from jackpot service %s ", err.Error())
-			return models.UssdResponse{Text: "We cannot process your request at the moment", ResponseType: "END"}
-		}
-
-		return models.UssdResponse{Text: jpRes.Description, ResponseType: "END"}
-
-	} else if action == "2" {
-		controller.clearRedisKeys(pageKey, betslipKey, jplevelKey, headerKey, key)
-		return controller.GetJackpotUSSD(ctx, profileID, session, "", msisdn, ipAddress)
-	}
-
-	processedBetslip := strings.ReplaceAll(betslipData, "2", "X")
-	processedBetslip = strings.ReplaceAll(processedBetslip, "3", "2")
-	processed := fmt.Sprintf("Your selections are:\n%s\n1. Place bet\n2. Clear BetSlip", processedBetslip)
-	return models.UssdResponse{Text: processed, ResponseType: "CON"}
 }
 
 // Clear Redis keys
@@ -1374,17 +1101,17 @@ func (controller *Controller) account(ctx context.Context, profileID int64, msis
 		updatelevel = "2"
 
 	default:
-		dt := wallet.BalanceRequest{ProfileID: profileID}
-
-		walletRes, err := controller.WalletServiceClient.GetBalance(ctx, &dt)
-		log.Printf("wallet response %v", walletRes)
-		if err != nil {
-			log.Printf("wallet error %v", err.Error())
-		}
-		bal := walletRes.CurrentBalance
-
-		// Format the USSD text with the extracted balance
-		ussdtext = fmt.Sprintf("My Account\nBalance: %v\nBonus:\nMaybets Points:\n1.Check Bet status\n2.Check Jackpot Bet status\n00. main menu", bal)
+		//dt := wallet.BalanceRequest{ProfileID: profileID}
+		//
+		//walletRes, err := controller.WalletServiceClient.GetBalance(ctx, &dt)
+		//log.Printf("wallet response %v", walletRes)
+		//if err != nil {
+		//	log.Printf("wallet error %v", err.Error())
+		//}
+		//bal := walletRes.CurrentBalance
+		//
+		//// Format the USSD text with the extracted balance
+		//ussdtext = fmt.Sprintf("My Account\nBalance: %v\nBonus:\nMaybets Points:\n1.Check Bet status\n2.Check Jackpot Bet status\n00. main menu", bal)
 
 	}
 	controller.setLevelInRedis(accountlevel, updatelevel, cacheDuration)
@@ -1392,61 +1119,62 @@ func (controller *Controller) account(ctx context.Context, profileID int64, msis
 
 }
 
-func (controller *Controller) ussdBet(ctx context.Context, profileID int64, message, ipAddress string) (string, error) {
-	log.Printf("Input Message: %s", message)
-	log.Printf("Input profile: %d", profileID)
-
-	if ipAddress == "" {
-		return "Error: IP address is required", fmt.Errorf("Error: IP address is required")
-	}
-
-	parts := strings.Split(message, "#")
-	if len(parts) < 3 {
-		log.Printf("Invalid Bet Format")
-		return "Error: Invalid bet format. Please use GameID#pick#amount", fmt.Errorf("Error: Invalid bet format. Please use GameID#pick#amount")
-
-	}
-
-	betType := constants.USSDBET
-	source := constants.SOURCE
-
-	amount, err := strconv.Atoi(parts[len(parts)-1])
-	if err != nil || amount <= 0 {
-		log.Printf("Invalid Bet Stake %d", amount)
-
-		return "Error: Invalid bet amount. Please provide a positive number.", fmt.Errorf("Error: Invalid bet amount. Please provide a positive number.")
-	}
-
-	bet, err := controller.parseBetSlips(ctx, parts[:len(parts)-1])
-	if err != nil {
-		log.Printf("Invalid Bet parsing %s", err.Error())
-
-		return fmt.Sprintf("Error: %s", err.Error()), fmt.Errorf("Error: %s", err.Error())
-	}
-
-	betResponse, err := controller.placeBet(ctx, profileID, float32(amount), source, constants.USSDCHANNELID, ipAddress, betType, bet)
-	if err != nil {
-		errMsg := err.Error()
-
-		// Find and extract the "desc" part of the error message
-		descIndex := strings.Index(errMsg, "desc =")
-		if descIndex != -1 {
-			// Extract the description part and trim any extra spaces
-			description := strings.TrimSpace(errMsg[descIndex+len("desc ="):])
-			log.Printf("Bet Placement Error: %s", description)
-			return description, fmt.Errorf("Bet Placement Error: %s", description)
-		} else {
-			log.Printf("Bet Placement Error2: %s", errMsg)
-			return errMsg, fmt.Errorf("Bet Placement Error2: %s", errMsg)
-		}
-
-	}
-
-	if betResponse.Status == 201 || betResponse.Status == 200 {
-		log.Printf("Success!! %d for %s", betResponse.Status, betResponse.ShareCode)
-
-		return fmt.Sprintf("Bet #%s placed successfully. Please wait for a confirmation message.", betResponse.ShareCode), nil
-	}
-
-	return fmt.Sprintf("Bet placement failed: %s", betResponse.Description), fmt.Errorf("Bet placement failed: %s", betResponse.Description)
-}
+//
+//func (controller *Controller) ussdBet(ctx context.Context, profileID int64, message, ipAddress string) (string, error) {
+//	log.Printf("Input Message: %s", message)
+//	log.Printf("Input profile: %d", profileID)
+//
+//	if ipAddress == "" {
+//		return "Error: IP address is required", fmt.Errorf("Error: IP address is required")
+//	}
+//
+//	parts := strings.Split(message, "#")
+//	if len(parts) < 3 {
+//		log.Printf("Invalid Bet Format")
+//		return "Error: Invalid bet format. Please use GameID#pick#amount", fmt.Errorf("Error: Invalid bet format. Please use GameID#pick#amount")
+//
+//	}
+//
+//	betType := constants.USSDBET
+//	source := constants.SOURCE
+//
+//	amount, err := strconv.Atoi(parts[len(parts)-1])
+//	if err != nil || amount <= 0 {
+//		log.Printf("Invalid Bet Stake %d", amount)
+//
+//		return "Error: Invalid bet amount. Please provide a positive number.", fmt.Errorf("Error: Invalid bet amount. Please provide a positive number.")
+//	}
+//
+//	bet, err := controller.parseBetSlips(ctx, parts[:len(parts)-1])
+//	if err != nil {
+//		log.Printf("Invalid Bet parsing %s", err.Error())
+//
+//		return fmt.Sprintf("Error: %s", err.Error()), fmt.Errorf("Error: %s", err.Error())
+//	}
+//
+//	betResponse, err := controller.placeBet(ctx, profileID, float32(amount), source, constants.USSDCHANNELID, ipAddress, betType, bet)
+//	if err != nil {
+//		errMsg := err.Error()
+//
+//		// Find and extract the "desc" part of the error message
+//		descIndex := strings.Index(errMsg, "desc =")
+//		if descIndex != -1 {
+//			// Extract the description part and trim any extra spaces
+//			description := strings.TrimSpace(errMsg[descIndex+len("desc ="):])
+//			log.Printf("Bet Placement Error: %s", description)
+//			return description, fmt.Errorf("Bet Placement Error: %s", description)
+//		} else {
+//			log.Printf("Bet Placement Error2: %s", errMsg)
+//			return errMsg, fmt.Errorf("Bet Placement Error2: %s", errMsg)
+//		}
+//
+//	}
+//
+//	if betResponse.Status == 201 || betResponse.Status == 200 {
+//		log.Printf("Success!! %d for %s", betResponse.Status, betResponse.ShareCode)
+//
+//		return fmt.Sprintf("Bet #%s placed successfully. Please wait for a confirmation message.", betResponse.ShareCode), nil
+//	}
+//
+//	return fmt.Sprintf("Bet placement failed: %s", betResponse.Description), fmt.Errorf("Bet placement failed: %s", betResponse.Description)
+//}

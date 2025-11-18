@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/BenBera/shortcode-service/app/constants"
 	"github.com/sirupsen/logrus"
 )

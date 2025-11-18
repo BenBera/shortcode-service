@@ -3,10 +3,11 @@ package crontask
 import (
 	"context"
 	"database/sql"
-	"github.com/BenBera/shortcode-service/app/grpc/identity"
+
+	"log"
+
 	"github.com/go-co-op/gocron/v2"
 	goutils "github.com/mudphilo/go-utils"
-	"log"
 )
 
 func (cron *Crontask) ScheduleCleanUp(db *sql.DB) {
@@ -61,17 +62,17 @@ func (cron *Crontask) SMSCampaign(ctx context.Context, db *sql.DB) {
 			continue
 		}
 
-		identityResponse, err := cron.IdentityServiceClient.GetProfileByMsisdn(context.Background(), &identity.Msisdn{
-			Msisdn: msisdn.Int64,
-		})
-		if err != nil {
-			log.Printf("Error retrieving profileDetails: %s", err.Error())
-			continue
-		}
+		//identityResponse, err := cron.IdentityServiceClient.GetProfileByMsisdn(context.Background(), &identity.Msisdn{
+		//	Msisdn: msisdn.Int64,
+		//})
+		//if err != nil {
+		//	log.Printf("Error retrieving profileDetails: %s", err.Error())
+		//	continue
+		//}
+		//
+		//smsGames := cron.Controller.GetSMSGames(ctx, identityResponse.Id, 10)
 
-		smsGames := cron.Controller.GetSMSGames(ctx, identityResponse.Id, 10)
-
-		cron.Controller.AutoResponse(ctx, 0, smsGames, false)
+		//cron.Controller.AutoResponse(ctx, 0, smsGames, false)
 
 	}
 }

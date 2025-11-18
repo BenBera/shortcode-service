@@ -14,21 +14,14 @@ import (
 
 	"github.com/BenBera/shortcode-service/app/auth"
 	"github.com/BenBera/shortcode-service/app/controllers"
-	"github.com/BenBera/shortcode-service/app/crontask"
 	db "github.com/BenBera/shortcode-service/app/database"
-	"github.com/BenBera/shortcode-service/app/grpc/betting"
-	"github.com/BenBera/shortcode-service/app/grpc/fixture"
-	"github.com/BenBera/shortcode-service/app/grpc/identity"
-	"github.com/BenBera/shortcode-service/app/grpc/jackpot"
 	"github.com/BenBera/shortcode-service/app/grpc/shortcode"
-	"github.com/BenBera/shortcode-service/app/grpc/wallet"
 	_ "github.com/BenBera/shortcode-service/docs"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
@@ -66,15 +59,15 @@ func (a *App) Initialize(tr trace.Tracer, ctx context.Context, dbInstance *sql.D
 	a.DBSlave = dbInstanceSlave
 	a.GlobalRedisConn = db.GlobalRedisClient()
 
-	cronjob := crontask.Crontask{
-		RabbitMQConn: db.GetRabbitMQConnection(),
-		DB:           a.DB,
-		DBSlave:      a.DBSlave,
-		RedisConn:    a.RedisConn,
-		Tracer:       tr,
-	}
+	//cronjob := crontask.Crontask{
+	//	RabbitMQConn: db.GetRabbitMQConnection(),
+	//	DB:           a.DB,
+	//	DBSlave:      a.DBSlave,
+	//	RedisConn:    a.RedisConn,
+	//	Tracer:       tr,
+	//}
 
-	go cronjob.SetupJobs(ctx)
+	//	go cronjob.SetupJobs(ctx)
 
 	const (
 		maxRetries = 5
@@ -85,7 +78,13 @@ func (a *App) Initialize(tr trace.Tracer, ctx context.Context, dbInstance *sql.D
 	var err error
 
 	for retry := 0; retry < maxRetries; retry++ {
-		controller, err = a.initializeController(tr, db.GetRabbitMQConnection())
+		controller = controllers.Controller{
+			RabbitMQConn: db.GetRabbitMQConnection(),
+			DB:           a.DB,
+			DBSlave:      a.DBSlave,
+			RedisConn:    a.RedisConn,
+			Tracer:       tr,
+		}
 		if err == nil {
 			break
 		}
@@ -106,45 +105,6 @@ func (a *App) Initialize(tr trace.Tracer, ctx context.Context, dbInstance *sql.D
 	go controllers.SDPRefreshAccessToken(a.RedisConn)
 
 	a.setRouters()
-}
-
-func (a *App) initializeController(tr trace.Tracer, rabbitMQConn *amqp.Connection) (controllers.Controller, error) {
-	controller := controllers.Controller{
-		RabbitMQConn: rabbitMQConn,
-		DB:           a.DB,
-		DBSlave:      a.DBSlave,
-		RedisConn:    a.RedisConn,
-		Tracer:       tr,
-	}
-
-	var err error
-	controller.IdentityServiceClient, err = NewIdentityServiceClient(os.Getenv("identity_service_endpoint"))
-	if err != nil {
-		log.Printf("error identity con: %s", err.Error())
-		return controller, err
-	}
-
-	controller.FixtureServiceClient, err = NewFixtureServiceClient(os.Getenv("fixture_service_endpoint"))
-	if err != nil {
-		return controller, err
-	}
-
-	controller.WalletServiceClient, err = NewWalletServiceClient(os.Getenv("wallet_service_endpoint"))
-	if err != nil {
-		return controller, err
-	}
-
-	controller.BettingServiceClient, err = NewBettingServiceClient(os.Getenv("betting_service_endpoint"))
-	if err != nil {
-		return controller, err
-	}
-
-	controller.JackpotServiceClient, err = NewJackpotServiceClient(os.Getenv("jackpot_service_endpoint"))
-	if err != nil {
-		return controller, err
-	}
-
-	return controller, nil
 }
 
 // setRouters sets the all required router
@@ -362,51 +322,4 @@ func getGrpcConnTls(target string) *grpc.ClientConn {
 	}
 
 	return conn
-}
-
-func NewIdentityServiceClient(URL string) (identity.IdentityClient, error) {
-	log.Printf("NewIdentityServiceClient - %s", URL)
-	conn := getGrpcConnWithFallback(URL)
-
-	if conn == nil {
-		return nil, fmt.Errorf("failed to establish connection to Identity Service at %s", URL)
-	}
-	return identity.NewIdentityClient(conn), nil
-}
-
-func NewFixtureServiceClient(URL string) (fixture.FixtureClient, error) {
-	//log.Printf("NewFixtureServiceClient - %s", URL)
-	conn := getGrpcConnWithFallback(URL)
-	if conn == nil {
-		return nil, fmt.Errorf("failed to establish connection to Fixture Service at %s", URL)
-
-	}
-	return fixture.NewFixtureClient(conn), nil
-}
-
-func NewWalletServiceClient(URL string) (wallet.WalletClient, error) {
-	//log.Printf("NewWalletServiceClient - %s", URL)
-	conn := getGrpcConnWithFallback(URL)
-	if conn == nil {
-		return nil, fmt.Errorf("failed to establish connection to Wallet Service at %s", URL)
-	}
-	return wallet.NewWalletClient(conn), nil
-}
-
-func NewBettingServiceClient(URL string) (betting.BettingClient, error) {
-	//log.Printf("NewBettingServiceClient - %s", URL)
-	conn := getGrpcConnWithFallback(URL)
-	if conn == nil {
-		return nil, fmt.Errorf("failed to establish connection to Betting Service at %s", URL)
-	}
-	return betting.NewBettingClient(conn), nil
-}
-
-func NewJackpotServiceClient(URL string) (jackpot.JackpotClient, error) {
-	//log.Printf("NewJackpotServiceClient - %s", URL)
-	conn := getGrpcConnWithFallback(URL)
-	if conn == nil {
-		return nil, fmt.Errorf("failed to establish connection to Jackpot Service at %s", URL)
-	}
-	return jackpot.NewJackpotClient(conn), nil
 }

@@ -15,10 +15,7 @@ import (
 	"time"
 
 	"github.com/BenBera/shortcode-service/app/constants"
-	"github.com/BenBera/shortcode-service/app/grpc/betting"
-	fx "github.com/BenBera/shortcode-service/app/grpc/fixture"
-	"github.com/BenBera/shortcode-service/app/grpc/jackpot"
-	"github.com/BenBera/shortcode-service/app/grpc/wallet"
+
 	"github.com/BenBera/shortcode-service/app/library"
 	"github.com/BenBera/shortcode-service/app/models"
 	"github.com/labstack/echo/v4"
@@ -166,194 +163,108 @@ func (controller *Controller) GetSMSGames(ctx context.Context, profileID int64, 
 
 	// retrieve last timestamp
 
-	key := fmt.Sprintf("LAST_SMS_QUERY_PRIORITY:%s:%d", goutils.Today(), profileID)
+	//key := fmt.Sprintf("LAST_SMS_QUERY_PRIORITY:%s:%d", goutils.Today(), profileID)
+	//
+	////lastTimestamp := "0"
+	//
+	//lt, err := library.GetRedisKey(controller.RedisConn, key)
+	//if err != nil {
+	//
+	//	log.Printf("error retrieving redis key %s ", err.Error())
+	//
+	//}
+	//
+	////lastTimestamp = lt
 
-	lastTimestamp := "0"
+	//lastPriority, err := strconv.Atoi(lastTimestamp)
+	//if err != nil {
+	//
+	//	lastPriority = 0
+	//}
 
-	lt, err := library.GetRedisKey(controller.RedisConn, key)
-	if err != nil {
+	//get fixtures
 
-		log.Printf("error retrieving redis key %s ", err.Error())
+	//if len(games.Games) == 0 {
+	//
+	//	return "No more SMS games for the day"
+	//
+	//}
+	//
+	//var parts []string
+	//for _, r := range games.Games {
+	//
+	//	sms := smsGame
+	//	sms = strings.Replace(sms, "{game_id}", fmt.Sprintf("%d", r.GameID), -1)
+	//	sms = strings.Replace(sms, "{match_name}", r.Name, -1)
+	//	sms = strings.Replace(sms, "{home}", fmt.Sprintf("%0.2f", r.Home), -1)
+	//	sms = strings.Replace(sms, "{draw}", fmt.Sprintf("%0.2f", r.Draw), -1)
+	//	sms = strings.Replace(sms, "{away}", fmt.Sprintf("%0.2f", r.Away), -1)
+	//	sms = strings.Replace(sms, "{time}", goutils.StringToTime(r.Date).Format("3:04 PM"), -1)
+	//	lastPriority = int(r.Priority)
+	//	parts = append(parts, sms)
+	//}
 
-	}
+	//message := strings.Join(parts, "{line}--{line}")
 
-	lastTimestamp = lt
+	//msg := controller.GetSMSTemplate(ctx, "SMS_GAMES")
+	//
+	//if len(msg) == 0 {
+	//
+	//	msg = gamesTemplate
+	//}
+	//
+	//msg = strings.Replace(msg, "{games}", message, -1)
+	//msg = strings.Replace(msg, "{line}", "\n", -1)
+	//
+	//if profileID > -1 {
+	//
+	//	err = library.SetRedisKeyWithExpiry(controller.RedisConn, key, fmt.Sprintf("%d", lastPriority), 60*10)
+	//	if err != nil {
+	//
+	//		logrus.WithContext(ctx).
+	//			WithFields(logrus.Fields{
+	//				constants.DESCRIPTION: "error saving redis key",
+	//				constants.DATA:        key,
+	//			}).
+	//			Error(err.Error())
+	//	}
 
-	lastPriority, err := strconv.Atoi(lastTimestamp)
-	if err != nil {
+	//}
 
-		lastPriority = 0
-	}
-
-	dt := fx.RequestSMSGame{
-		Count:        int64(count),
-		FromPriority: int64(lastPriority),
-	}
-
-	games, err := controller.FixtureServiceClient.GetSMSGames(ctx, &dt)
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to get games from fixture service",
-				constants.DATA:        dt.String(),
-			}).
-			Error(err.Error())
-
-		return "Welcome to Maybets where winners are made"
-
-	}
-
-	if len(games.Games) == 0 {
-
-		return "No more SMS games for the day"
-
-	}
-
-	var parts []string
-	for _, r := range games.Games {
-
-		sms := smsGame
-		sms = strings.Replace(sms, "{game_id}", fmt.Sprintf("%d", r.GameID), -1)
-		sms = strings.Replace(sms, "{match_name}", r.Name, -1)
-		sms = strings.Replace(sms, "{home}", fmt.Sprintf("%0.2f", r.Home), -1)
-		sms = strings.Replace(sms, "{draw}", fmt.Sprintf("%0.2f", r.Draw), -1)
-		sms = strings.Replace(sms, "{away}", fmt.Sprintf("%0.2f", r.Away), -1)
-		sms = strings.Replace(sms, "{time}", goutils.StringToTime(r.Date).Format("3:04 PM"), -1)
-		lastPriority = int(r.Priority)
-		parts = append(parts, sms)
-	}
-
-	message := strings.Join(parts, "{line}--{line}")
-
-	msg := controller.GetSMSTemplate(ctx, "SMS_GAMES")
-
-	if len(msg) == 0 {
-
-		msg = gamesTemplate
-	}
-
-	msg = strings.Replace(msg, "{games}", message, -1)
-	msg = strings.Replace(msg, "{line}", "\n", -1)
-
-	if profileID > -1 {
-
-		err = library.SetRedisKeyWithExpiry(controller.RedisConn, key, fmt.Sprintf("%d", lastPriority), 60*10)
-		if err != nil {
-
-			logrus.WithContext(ctx).
-				WithFields(logrus.Fields{
-					constants.DESCRIPTION: "error saving redis key",
-					constants.DATA:        key,
-				}).
-				Error(err.Error())
-		}
-
-	}
-
-	return msg
-}
-
-func (controller *Controller) GetJackpotSMSGames(ctx context.Context, CategoryID int64) string {
-	dt := jackpot.JackpotGamesRequest{
-		CategoryID: CategoryID,
-	}
-
-	games, err := controller.JackpotServiceClient.JpGames(ctx, &dt)
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to get games from Jackpot service",
-				constants.DATA:        dt.String(),
-			}).
-			Error(err.Error())
-
-		return "Welcome to Maybets where winners are made"
-
-	}
-
-	if len(games.Games) == 0 {
-
-		return "Sorry we do not have active jackpot at the moment. Please keep checking for a surprise "
-
-	}
-
-	return games.Games
+	return ""
 }
 
 func (controller *Controller) GetBalance(ctx context.Context, profileID int64) string {
 
-	dt := wallet.BalanceRequest{ProfileID: profileID}
+	//get wallet balance
 
-	walletRes, err := controller.WalletServiceClient.GetBalance(ctx, &dt)
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to get balance from wallet service",
-				constants.DATA:        dt.String(),
-			}).
-			Error(err.Error())
-
-		return "Welcome to Maybets where winners are made"
-
-	}
-
-	templateName := "BALANCE_QUERY"
-	sms := controller.GetSMSTemplate(ctx, templateName)
-
-	replacements := map[string]string{
-		"balance": fmt.Sprintf("%d", int64(walletRes.CurrentBalance)),
-	}
-
-	sms = BuildSMS(sms, replacements)
-
-	return sms
-
+	//templateName := "BALANCE_QUERY"
+	//sms := controller.GetSMSTemplate(ctx, templateName)
+	//
+	//replacements := map[string]string{
+	//	"balance": fmt.Sprintf("%d", int64(walletRes.CurrentBalance)),
+	//}
+	//
+	//sms = BuildSMS(sms, replacements)
+	//
+	//return sms
+	return ""
 }
 
 func (controller *Controller) DoWithdraw(ctx context.Context, profileID int64, amount float64) string {
 
-	dt := wallet.WithdrawRequest{ProfileID: profileID, Amount: float32(amount)}
+	//initiate withdraw request
 
-	walletRes, err := controller.WalletServiceClient.Withdraw(ctx, &dt)
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to perfom withdraw from wallet service",
-				constants.DATA:        dt.String(),
-			}).
-			Error(err.Error())
-
-		return "we cannot perfom your request at the moment, try again later"
-
-	}
-
-	return walletRes.Description
+	//return walletRes.Description
+	return ""
 
 }
 
 func (controller *Controller) DoStk(ctx context.Context, profileID int64, amount float64) string {
 
-	dt := wallet.STKRequest{ProfileID: profileID, Amount: float32(amount), Account: "sms"}
+	//initiate stk push
 
-	walletRes, err := controller.WalletServiceClient.STK(ctx, &dt)
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to perfom STK from wallet service",
-				constants.DATA:        dt.String(),
-			}).
-			Error(err.Error())
-
-		return "we cannot perfom your request at the moment, try again later"
-
-	}
-
-	return walletRes.Description
+	return ""
 
 }
 
@@ -405,39 +316,22 @@ func (controller *Controller) GetSMSTemplate(ctx context.Context, templateName s
 
 func (controller *Controller) betStatus(ctx context.Context, profileID int64, shareCode string) string {
 
-	dt := betting.BetStatusRequest{
-		ProfileID: profileID,
-		ShareCode: shareCode,
-	}
+	//get bet status
 
-	betStatusRes, err := controller.BettingServiceClient.BetStatus(ctx, &dt)
-
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to get bet status from betting service",
-				constants.DATA:        dt.String(),
-			}).
-			Info(err.Error())
-
-		return "we cannot perform your request at the moment, try again later"
-	}
-
-	var betSlips []string
-	x := 0
-
-	for _, v := range betStatusRes.SelectedSlips {
-
-		x++
-		sp := fmt.Sprintf("%d. %s - %s", x, v.MatchName, v.Description)
-		betSlips = append(betSlips, sp)
-	}
-
-	selections := strings.Join(betSlips, "{line}")
-
-	return BuildSMS(fmt.Sprintf("Bet Status betID#%s{line}--{line}%s", shareCode, selections), nil)
-
+	//var betSlips []string
+	//x := 0
+	//
+	//for _, v := range betStatusRes.SelectedSlips {
+	//
+	//	x++
+	//	sp := fmt.Sprintf("%d. %s - %s", x, v.MatchName, v.Description)
+	//	betSlips = append(betSlips, sp)
+	//}
+	//
+	//selections := strings.Join(betSlips, "{line}")
+	//
+	//return BuildSMS(fmt.Sprintf("Bet Status betID#%s{line}--{line}%s", shareCode, selections), nil)
+	return ""
 }
 
 /*
@@ -561,115 +455,74 @@ func (controller *Controller) betCancel(ctx context.Context, profileID, MSISDN i
 
 func (controller *Controller) ussdbetStatus(ctx context.Context, profileID int64, action string, session string, bettype string) (string, string) {
 
-	key := fmt.Sprintf("BS_Games:%s:%d:%s", session, profileID, bettype)
-	headerkey := fmt.Sprintf("BS_Games:H:%s:%d:%s", session, profileID, bettype)
-	pageKey := fmt.Sprintf("BS_PAGE:%s:%d:%s", session, profileID, bettype)
-
-	// Check if key exists in Redis
-
-	cachedData, err := library.GetRedisKey(controller.RedisConn, key)
-
-	if err != nil || cachedData == "" {
-		betSlips := []string{}
-		var status string
-		var header string
-		if bettype == "normal" {
-			dt := betting.BetStatusRequest{
-				ProfileID: profileID,
-				ShareCode: action,
-			}
-			// Fetch from betting service if not in Redis
-			betStatusRes, err := controller.BettingServiceClient.BetStatus(ctx, &dt)
-			if err != nil {
-				logrus.WithContext(ctx).
-					WithFields(logrus.Fields{
-						constants.DESCRIPTION: "Failed to get bet status from betting service",
-						constants.DATA:        dt.String(),
-					}).
-					Info(err.Error())
-
-				return "sorry we could not check your bet status at the moment, your have entered invalid bet ID", USSDEND
-			}
-
-			// Store fetched data in Redis with expiry (5 minutes)
-
-			for i, v := range betStatusRes.SelectedSlips {
-				betSlips = append(betSlips, fmt.Sprintf("%d. %s - %s", i+1, v.MatchName, v.Description))
-			}
-			// Determine bet status
-			status = library.DetermineBetStatus(betStatusRes.Status)
-			header = fmt.Sprintf("BetID: %s Status: %s", action, status)
-		} else {
-			jp := jackpot.JPBetStatusRequest{
-				ProfileID: profileID,
-				ShareCode: action,
-			}
-			betStatusRes, err := controller.JackpotServiceClient.JPBetStatus(ctx, &jp)
-			if err != nil {
-				logrus.WithContext(ctx).
-					WithFields(logrus.Fields{
-						constants.DESCRIPTION: "Failed to get bet status from jackpot service",
-						constants.DATA:        jp.String(),
-					}).
-					Info(err.Error())
-
-				return "sorry we could not check your bet status at the moment, your have entered invalid bet ID", USSDEND
-			}
-			for i, v := range betStatusRes.JackpotSelectedSlips {
-				betSlips = append(betSlips, fmt.Sprintf("%d. %s - %s", i+1, v.MatchName, v.Description))
-			}
-			// Determine bet status
-			status = library.DetermineBetStatus(betStatusRes.Status)
-			jackpotname := "Weekly Jackpot"
-			if betStatusRes.JackpotID == 5 {
-				jackpotname = "Daily Jackpot"
-			}
-
-			header = fmt.Sprintf("%s BetID: %s Status: %s", jackpotname, action, status)
-		}
-
-		// Store bet slips in Redis
-		library.SetRedisKeyWithExpiry(controller.RedisConn, key, strings.Join(betSlips, "|"), 300)
-		library.SetRedisKeyWithExpiry(controller.RedisConn, headerkey, header, 300)
-		library.SetRedisKeyWithExpiry(controller.RedisConn, pageKey, "0", 300)
-
-		return fmt.Sprintf("%s\nPress 1 to view the betslip.\n1.View betslip\n00. Main Menu", header), USSDCON
-	}
-	pageStr, err := library.GetRedisKey(controller.RedisConn, pageKey)
-	if err != nil {
-
-		return "we cannot perform your request at the moment, try again later", USSDEND
-	}
-	page, _ := strconv.Atoi(pageStr)
-
-	// Get stored bet slips
-	betSlips := strings.Split(cachedData, "|")
-	totalPages := (len(betSlips) + NOBETSTATUSGAMES - 1) / NOBETSTATUSGAMES // Two games per page
-
-	switch action {
-	case "0":
-		if page > 0 {
-			page--
-		}
-	case "88":
-		if page < totalPages-1 {
-			page++
-		}
-	}
-
-	// Store updated page in Redis
-	library.SetRedisKeyWithExpiry(controller.RedisConn, pageKey, strconv.Itoa(page), 300)
-
-	// Display paginated games (games per page)
-	start := page * NOBETSTATUSGAMES
-	end := start + NOBETSTATUSGAMES
-	if end > len(betSlips) {
-		end = len(betSlips)
-	}
-	displayGames := strings.Join(betSlips[start:end], "\n")
-	headerStr, _ := library.GetRedisKey(controller.RedisConn, headerkey)
-
-	return fmt.Sprintf("%s\n%s\n0. Back\n88. Next\n00. Main Menu", headerStr, displayGames), USSDCON
+	//key := fmt.Sprintf("BS_Games:%s:%d:%s", session, profileID, bettype)
+	//headerkey := fmt.Sprintf("BS_Games:H:%s:%d:%s", session, profileID, bettype)
+	//pageKey := fmt.Sprintf("BS_PAGE:%s:%d:%s", session, profileID, bettype)
+	//
+	//// Check if key exists in Redis
+	//
+	//cachedData, err := library.GetRedisKey(controller.RedisConn, key)
+	//
+	//if err != nil || cachedData == "" {
+	//	betSlips := []string{}
+	//	var status string
+	//	var header string
+	//	if bettype == "normal" {
+	//		//get bet status
+	//
+	//		// Store fetched data in Redis with expiry (5 minutes)
+	//
+	//		for i, v := range betStatusRes.SelectedSlips {
+	//			betSlips = append(betSlips, fmt.Sprintf("%d. %s - %s", i+1, v.MatchName, v.Description))
+	//		}
+	//		// Determine bet status
+	//		status = library.DetermineBetStatus(betStatusRes.Status)
+	//		header = fmt.Sprintf("BetID: %s Status: %s", action, status)
+	//	}
+	//
+	//	// Store bet slips in Redis
+	//	library.SetRedisKeyWithExpiry(controller.RedisConn, key, strings.Join(betSlips, "|"), 300)
+	//	library.SetRedisKeyWithExpiry(controller.RedisConn, headerkey, header, 300)
+	//	library.SetRedisKeyWithExpiry(controller.RedisConn, pageKey, "0", 300)
+	//
+	//	return fmt.Sprintf("%s\nPress 1 to view the betslip.\n1.View betslip\n00. Main Menu", header), USSDCON
+	//}
+	//pageStr, err := library.GetRedisKey(controller.RedisConn, pageKey)
+	//if err != nil {
+	//
+	//	return "we cannot perform your request at the moment, try again later", USSDEND
+	//}
+	//page, _ := strconv.Atoi(pageStr)
+	//
+	//// Get stored bet slips
+	//betSlips := strings.Split(cachedData, "|")
+	//totalPages := (len(betSlips) + NOBETSTATUSGAMES - 1) / NOBETSTATUSGAMES // Two games per page
+	//
+	//switch action {
+	//case "0":
+	//	if page > 0 {
+	//		page--
+	//	}
+	//case "88":
+	//	if page < totalPages-1 {
+	//		page++
+	//	}
+	//}
+	//
+	//// Store updated page in Redis
+	//library.SetRedisKeyWithExpiry(controller.RedisConn, pageKey, strconv.Itoa(page), 300)
+	//
+	//// Display paginated games (games per page)
+	//start := page * NOBETSTATUSGAMES
+	//end := start + NOBETSTATUSGAMES
+	//if end > len(betSlips) {
+	//	end = len(betSlips)
+	//}
+	//displayGames := strings.Join(betSlips[start:end], "\n")
+	//headerStr, _ := library.GetRedisKey(controller.RedisConn, headerkey)
+	//
+	//return fmt.Sprintf("%s\n%s\n0. Back\n88. Next\n00. Main Menu", headerStr, displayGames), USSDCON
+	return "", ""
 }
 
 func (controller *Controller) smsBet(ctx context.Context, profileID int64, message, ipAddress string) string {
@@ -686,8 +539,8 @@ func (controller *Controller) smsBet(ctx context.Context, profileID int64, messa
 		return "Error: Invalid bet format. Please use GameID#pick#amount"
 	}
 
-	betType := 3
-	source := 3
+	//betType := 3
+	//source := 3
 
 	amount, err := strconv.Atoi(parts[len(parts)-1])
 	if err != nil || amount <= 0 {
@@ -696,163 +549,74 @@ func (controller *Controller) smsBet(ctx context.Context, profileID int64, messa
 		return "Error: Invalid bet amount. Please provide a positive number."
 	}
 
-	bet, err := controller.parseBetSlips(ctx, parts[:len(parts)-1])
-	if err != nil {
-		log.Printf("Invalid Bet parsing %s", err.Error())
+	//bet, err := controller.parseBetSlips(ctx, parts[:len(parts)-1])
+	//if err != nil {
+	//	log.Printf("Invalid Bet parsing %s", err.Error())
+	//
+	//	return fmt.Sprintf("Error: %s", err.Error())
+	//}
+	//
+	//_, err := controller.placeBet(ctx, profileID, float32(amount), source, constants.SMSCHANNELID, ipAddress, betType, bet)
+	//if err != nil {
+	//	errMsg := err.Error()
+	//
+	//	// Find and extract the "desc" part of the error message
+	//	descIndex := strings.Index(errMsg, "desc =")
+	//	if descIndex != -1 {
+	//		// Extract the description part and trim any extra spaces
+	//		description := strings.TrimSpace(errMsg[descIndex+len("desc ="):])
+	//		log.Printf("Bet Placement Error: %s", description)
+	//		return description
+	//	} else {
+	//		log.Printf("Bet Placement Error2: %s", errMsg)
+	//		return errMsg
+	//	}
+	//
+	//}
 
-		return fmt.Sprintf("Error: %s", err.Error())
-	}
+	//if betResponse.Status == 201 || betResponse.Status == 200 {
+	//	log.Printf("Success!! %d for %s", betResponse.Status, betResponse.ShareCode)
+	//
+	//	return fmt.Sprintf("Bet #%s placed successfully. Please wait for a confirmation message.", betResponse.ShareCode)
+	//}
 
-	betResponse, err := controller.placeBet(ctx, profileID, float32(amount), source, constants.SMSCHANNELID, ipAddress, betType, bet)
-	if err != nil {
-		errMsg := err.Error()
-
-		// Find and extract the "desc" part of the error message
-		descIndex := strings.Index(errMsg, "desc =")
-		if descIndex != -1 {
-			// Extract the description part and trim any extra spaces
-			description := strings.TrimSpace(errMsg[descIndex+len("desc ="):])
-			log.Printf("Bet Placement Error: %s", description)
-			return description
-		} else {
-			log.Printf("Bet Placement Error2: %s", errMsg)
-			return errMsg
-		}
-
-	}
-
-	if betResponse.Status == 201 || betResponse.Status == 200 {
-		log.Printf("Success!! %d for %s", betResponse.Status, betResponse.ShareCode)
-
-		return fmt.Sprintf("Bet #%s placed successfully. Please wait for a confirmation message.", betResponse.ShareCode)
-	}
-
-	return fmt.Sprintf("Bet placement failed: %s", betResponse.Description)
+	return fmt.Sprintf("Bet placement failed")
 }
 
-func (controller *Controller) parseBetSlips(ctx context.Context, parts []string) ([]*betting.Slips, error) {
-	var bet []*betting.Slips
-
-	for i := 0; i < len(parts)-1; i += 2 {
-		gameID, err := strconv.Atoi(strings.TrimSpace(parts[i]))
-		if err != nil {
-			return nil, fmt.Errorf("invalid game ID: %s", parts[i])
-		}
-
-		pick := strings.TrimSpace(parts[i+1])
-		marketID, specifier, outcomeID, err := controller.GetAlias(pick)
-		if err != nil {
-			return nil, fmt.Errorf("invalid market: %s", pick)
-		}
-
-		slip, err := controller.getOddsByGameID(ctx, int64(gameID), int32(marketID), specifier, outcomeID)
-		if err != nil {
-			return nil, fmt.Errorf("error fetching odds: %s", err)
-		}
-
-		bet = append(bet, slip)
-	}
-
-	return bet, nil
+func (controller *Controller) parseBetSlips(ctx context.Context, parts []string) error {
+	//var bet []*betting.Slips
+	//
+	//for i := 0; i < len(parts)-1; i += 2 {
+	//	gameID, err := strconv.Atoi(strings.TrimSpace(parts[i]))
+	//	if err != nil {
+	//		return nil, fmt.Errorf("invalid game ID: %s", parts[i])
+	//	}
+	//
+	//	pick := strings.TrimSpace(parts[i+1])
+	//	marketID, specifier, outcomeID, err := controller.GetAlias(pick)
+	//	if err != nil {
+	//		return nil, fmt.Errorf("invalid market: %s", pick)
+	//	}
+	//
+	//	slip, err := controller.getOddsByGameID(ctx, int64(gameID), int32(marketID), specifier, outcomeID)
+	//	if err != nil {
+	//		return nil, fmt.Errorf("error fetching odds: %s", err)
+	//	}
+	//
+	//	bet = append(bet, slip)
+	//}
+	//process slip
+	return nil
 }
 
-func (controller *Controller) getOddsByGameID(ctx context.Context, gameID int64, marketID int32, specifier string, outcomeID string) (*betting.Slips, error) {
-	dt := fx.OddsByGameIdRequest{
-		GameID:     gameID,
-		MarketID:   marketID,
-		Specifier:  specifier,
-		OutcomeID:  outcomeID,
-		ProducerID: 3,
-	}
-
-	fxRes, err := controller.FixtureServiceClient.GetOddsByGameID(ctx, &dt)
-	if err != nil {
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			constants.DESCRIPTION: "error getting odd id from fixture service",
-			constants.DATA:        dt.String(),
-		}).Error(err.Error())
-		return nil, fmt.Errorf("error fetching odds for game ID %d", gameID)
-	}
-
-	return &betting.Slips{
-		MarketID:   fxRes.MarketId,
-		Specifier:  fxRes.Specifier,
-		OutcomeID:  fxRes.OutcomeId,
-		ProducerID: fxRes.ProducerId,
-		MatchID:    fxRes.MatchId,
-	}, nil
+func (controller *Controller) getOddsByGameID(ctx context.Context, gameID int64, marketID int32, specifier string, outcomeID string) error {
+	//get match odds
+	return nil
 }
 
-func (controller *Controller) placeBet(ctx context.Context, profileID int64, stake float32, source int, ChannelID int, ipAddress string, betType int, slips []*betting.Slips) (*betting.PlaceBetResponseMessage, error) {
-	betRequest := betting.PlaceBetRequest{
-		ProfileID:   profileID,
-		Stake:       stake,
-		Source:      strconv.Itoa(source),
-		IpAddress:   ipAddress,
-		BetType:     int64(betType),
-		Slips:       slips,
-		ChannelID:   int64(ChannelID),
-		BookingCode: "",
-	}
-
-	betResponse, err := controller.BettingServiceClient.PlaceBet(ctx, &betRequest)
-	if err != nil {
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			constants.DESCRIPTION: "error placing bet with betting service",
-			constants.DATA:        betRequest.String(),
-		}).Warn(err.Error())
-		return nil, fmt.Errorf("failed to place bet: %s", err)
-	}
-
-	return betResponse, nil
-}
-
-func (controller *Controller) jpAuto(ctx context.Context, profileID int64, message, ipAddress string, jackpotCategoryID int64) string {
-
-	// jpauto
-
-	jpRes, err := controller.JackpotServiceClient.AutoPick(ctx, &jackpot.AutoPickRequest{
-		ProfileID: profileID,
-		Stake:     float32(0),
-		IpAddress: ipAddress,
-		JackpotID: jackpotCategoryID,
-	})
-
-	if err != nil {
-
-		log.Printf("error placing auto pick from jackpot service %s ", err.Error())
-
-		return "We cannot process your request at the moment"
-	}
-
-	return jpRes.Description
-
-}
-
-func (controller *Controller) jpBet(ctx context.Context, profileID int64, message, ipAddress string, jackpotCategoryID int64) string {
-
-	// jpauto#stake
-
-	parts := strings.Split(message, "#")
-	message = parts[1]
-	log.Printf("Here are the messsage %s", message)
-
-	jpRes, err := controller.JackpotServiceClient.AliasPick(ctx, &jackpot.AliasPickRequest{
-		ProfileID: profileID,
-		Stake:     0,
-		IpAddress: ipAddress,
-		JackpotID: jackpotCategoryID,
-		Alias:     message,
-	})
-
-	if err != nil {
-
-		log.Printf("error placing user pick from jackpot service %s ", err.Error())
-		return "We cannot process your request at the moment"
-	}
-
-	return jpRes.Description
-
+func (controller *Controller) placeBet(ctx context.Context, profileID int64, stake float32, source int, ChannelID int, ipAddress string, betType int) error {
+	//place bet
+	return nil
 }
 
 func (controller *Controller) getIntouchToken() (string, error) {

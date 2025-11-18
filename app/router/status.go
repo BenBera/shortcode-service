@@ -2,14 +2,12 @@ package router
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/BenBera/shortcode-service/app/database"
-	"github.com/BenBera/shortcode-service/app/grpc/fixture"
-	"github.com/BenBera/shortcode-service/app/grpc/identity"
-	"github.com/BenBera/shortcode-service/app/grpc/jackpot"
-	"github.com/labstack/echo/v4"
-	"log"
+
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 func (a *App) GetStatus(c echo.Context) error {
@@ -20,60 +18,6 @@ func (a *App) GetStatus(c echo.Context) error {
 	status := make(map[string]interface{})
 
 	statusCode := http.StatusOK
-
-	res, err := a.Controller.FixtureServiceClient.Ping(ctx, &fixture.PingRequest{})
-	if err != nil {
-
-		log.Printf("error checking fixture service health %s ", err.Error())
-		status["fixture-service"] = fmt.Sprintf("error checking fixture service health %s ", err.Error())
-		statusCode = http.StatusInternalServerError
-
-	} else {
-
-		if res.Status != http.StatusOK {
-
-			log.Printf("error checking FixtureServiceClient health %s ", res.Data)
-			status["fixture-service"] = res.Data
-			statusCode = int(res.Status)
-
-		}
-	}
-
-	res1, err := a.Controller.IdentityServiceClient.Ping(ctx, &identity.PingRequest{})
-	if err != nil {
-
-		log.Printf("error checking fixture service health %s ", err.Error())
-		status["identity-service"] = fmt.Sprintf("error checking identity service health %s ", err.Error())
-		statusCode = http.StatusInternalServerError
-
-	} else {
-
-		if res1.Status != http.StatusOK {
-
-			log.Printf("error checking IdentityServiceClient health %s ", res1.Data)
-			status["identity-service"] = res1.Data
-			statusCode = int(res.Status)
-
-		}
-	}
-
-	res2, err := a.Controller.JackpotServiceClient.Ping(ctx, &jackpot.JackpotPing{})
-	if err != nil {
-
-		log.Printf("error checking jackpot service health %s ", err.Error())
-		status["odds-service"] = fmt.Sprintf("error checking jackpot service health %s ", err.Error())
-		statusCode = http.StatusInternalServerError
-
-	} else {
-
-		if res2.Status != http.StatusOK {
-
-			log.Printf("error checking JackpotServiceClient health %s ", res2.Data)
-			status["jackpot-service"] = res2.Data
-			statusCode = int(res.Status)
-
-		}
-	}
 
 	st, re := database.CheckConnectionStatus(c.Request().Context(), a.DB)
 
