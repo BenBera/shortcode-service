@@ -24,20 +24,20 @@ func (controller *Controller) ProcessInbox(ctx context.Context, u *models.Inbox,
 	//	return controller.handleError(ctx, err, "Failed to create user", u)
 	//}
 	//
-	//if err := controller.saveInbox(ctx, u); err != nil {
-	//	return controller.handleError(ctx, err, "Failed to create inbox", u)
-	//}
-	//
-	//message := u.Message
-	//if message == "" {
-	//	message = "join"
-	//}
-	//
-	//return controller.processMessage(ctx, message,  u.InboxID, ipAddress, sdpAutoResponse)
-	return 0, nil
+	if err := controller.saveInbox(ctx, u); err != nil {
+		return controller.handleError(ctx, err, "Failed to create inbox", u)
+	}
+
+	message := u.Message
+	if message == "" {
+		message = "join"
+	}
+
+	return controller.processMessage(ctx, message, u.Msisdn, u.InboxID, ipAddress, sdpAutoResponse)
+
 }
 
-func (controller *Controller) processMessage(ctx context.Context, message string, inboxID int64, ipAddress string, sdpAutoResponse bool) (int, interface{}) {
+func (controller *Controller) processMessage(ctx context.Context, message, msisdn string, inboxID int64, ipAddress string, sdpAutoResponse bool) (int, interface{}) {
 	//logrus.WithContext(ctx).Infof("Processing message: '%s', ID %d ", message, inboxID)
 	//profileID := profile.Id
 	//// First, check if the message matches the SMS betting format

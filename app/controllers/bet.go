@@ -76,11 +76,11 @@ func (controller *Controller) Inbox(c echo.Context) error {
 	return RespondRaw(c, statusCode, response)
 }
 
-func (controller *Controller) AutoResponse(ctx context.Context, inboxID int64, message string, sdpAutoResponse bool) {
+func (controller *Controller) AutoResponse(ctx context.Context, inboxID int64, message, msisdn string, sdpAutoResponse bool) {
 
 	if sdpAutoResponse || inboxID < 1000 {
 
-		_ = controller.SDPAutoresponse(inboxID, message)
+		_ = controller.SDPAutoresponse(inboxID, message, msisdn)
 		return
 
 	}

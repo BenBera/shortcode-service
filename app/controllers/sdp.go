@@ -4,6 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
+	"math/rand"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/BenBera/shortcode-service/app/constants"
 	"github.com/BenBera/shortcode-service/app/library"
 	"github.com/BenBera/shortcode-service/app/models"
@@ -11,13 +18,6 @@ import (
 	"github.com/labstack/echo/v4"
 	goutils "github.com/mudphilo/go-utils"
 	"github.com/sirupsen/logrus"
-	"log"
-	"math/rand"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func (controller *Controller) SDPIncomingSMS(c echo.Context) error {
@@ -211,110 +211,40 @@ func (controller *Controller) SDPIncomingSMS(c echo.Context) error {
 
 }
 
-func (controller *Controller) SDPAutoresponse(inboxID int64, message string) error {
-
-	// get details
-	var linkId, offerCode sql.NullString
-	var _msisdn sql.NullInt64
-
-	dbUtil := goutils.Db{DBSlave: controller.DBSlave}
-	dbUtil.SetQuery("SELECT offer_code, msisdn,link_id FROM safaricom_inbox WHERE id = ?  ")
-	dbUtil.SetParams(inboxID)
-
-	err := dbUtil.FetchOneSlave().Scan(&offerCode, &_msisdn, &linkId)
-	if err != nil {
-
-		logrus.WithFields(logrus.Fields{
-			constants.DESCRIPTION: fmt.Sprintf("error retrieving sms details from inbox %s ", err.Error()),
-		}).Error(err.Error())
-		return err
-
+func (controller *Controller) SDPAutoresponse(inboxID int64, message, msisdn string) error {
+	endpoint := os.Getenv("SHORTCODE_URL")
+	payload := models.ShortCodeAutoResponse{
+		Mobile:     msisdn,
+		SenderName: os.Getenv("SHORTCODE_NAME"),
+		ServiceID:  1,
+		LinkID:     fmt.Sprintf("%d", inboxID), //assumption link id is inbox is
+		Message:    message,
 	}
-
-	msisdn := fmt.Sprintf("%d", _msisdn.Int64)
-
-	// remove 254 or 0 prefix from msisdn
-	if strings.HasPrefix(msisdn, "254") {
-
-		parts := strings.Split(msisdn, "254")
-		msisdn = strings.Join(parts[1:], "254")
-
-	} else if strings.HasPrefix(msisdn, "07") {
-
-		parts := strings.Split(msisdn, "0")
-		msisdn = strings.Join(parts[1:], "0")
-
-	} else if strings.HasPrefix(msisdn, "01") {
-
-		parts := strings.Split(msisdn, "0")
-		msisdn = strings.Join(parts[1:], "0")
-	}
-
-	requestTimestamp := ToTimestamp(time.Now())
-	Channel := os.Getenv("SDP_SENDSMS_CHANNEL")
-	Operation := "SendSMS"
-	CpId := os.Getenv("SDP_CPID")
-	SourceAddress := os.Getenv("SDP_SOURCE_ADDRESS")
-
-	var requestParams models.RequestParam
-
-	requestParams.Data = append(requestParams.Data, models.DataParam{
-		Name:  "Msisdn",
-		Value: msisdn,
-	})
-
-	requestParams.Data = append(requestParams.Data, models.DataParam{
-		Name:  "Content",
-		Value: message,
-	})
-
-	requestParams.Data = append(requestParams.Data, models.DataParam{
-		Name:  "OfferCode",
-		Value: offerCode.String,
-	})
-
-	requestParams.Data = append(requestParams.Data, models.DataParam{
-		Name:  "CpId",
-		Value: CpId,
-	})
-
-	requestParams.Data = append(requestParams.Data, models.DataParam{
-		Name:  "LinkId",
-		Value: linkId.String,
-	})
-
-	requestID, _ := strconv.ParseInt(fmt.Sprintf("%d", inboxID), 10, 64)
-
-	SendSMSPayload := models.SendSMS{
-		RequestID:        requestID,
-		RequestTimeStamp: requestTimestamp,
-		Channel:          Channel,
-		SourceAddress:    SourceAddress,
-		Operation:        Operation,
-		RequestParam:     requestParams,
-	}
-
-	sendSmsUrl := os.Getenv("SDP_SENDSMS_URL")
-	if len(sendSmsUrl) == 0 {
-
-		sendSmsUrl = "https://dsvc.safaricom.com:8480/api/public/SDP/sendSMSRequest"
-	}
-
-	// get token
-	data := SDPGetToken(controller.RedisConn)
-
+	jsP, _ := json.MarshalIndent(payload, " ", "\t")
 	headers := map[string]string{
-		"X-Requested-With": "XMLHttpRequest",
-		"Content-Type":     "application/json",
-		"X-Authorization":  fmt.Sprintf("Bearer %s", data),
-		"SourceAddress":    SourceAddress,
+		"h_api_key": os.Getenv("H_API_KEY"),
 	}
+	st, body := goutils.HTTPPost(endpoint, headers, payload)
 
-	jsP, _ := json.MarshalIndent(SendSMSPayload, " ", "\t")
+	var resp []models.SMSResponse
+	err := json.Unmarshal([]byte(body), &resp)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			constants.DESCRIPTION: "got error unmarshalling shortcode response",
+		}).Error(err.Error())
+	}
+	for _, v := range resp {
+		if v.StatusCode != "1000" {
+			x, _ := json.MarshalIndent(v, "", "\t")
+			logrus.WithFields(logrus.Fields{
+				constants.DESCRIPTION: "got error submitting shortcode auto  response",
+				"response_body":       string(x),
+			}).Debug()
+			return fmt.Errorf("error submitting shortcode auto response")
 
-	st, body := goutils.HTTPPost(sendSmsUrl, headers, SendSMSPayload)
-
-	log.Printf("%s | %s | response %d | %s ", sendSmsUrl, string(jsP), st, body)
+		}
+	}
+	log.Printf("%s | %s | response %d | %v ", endpoint, string(jsP), st, resp)
 
 	return nil
 

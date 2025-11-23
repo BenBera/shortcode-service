@@ -218,7 +218,7 @@ func (controller *Controller) handleKeyMinusFour(ctx context.Context, session st
 	firstresponse := models.UssdResponse{Text: MAINRESPONSE, ResponseType: "CON"}
 	//regex check to match password requirements
 	if len(userResponse) < 3 {
-		return models.UssdResponse{Text: "Password does no meet requirements", ResponseType: "END"}, nil
+		return models.UssdResponse{Text: "Password does not meet requirements", ResponseType: "END"}, nil
 	}
 
 	endpoint := "https://9ubet.co.ke/api/userRegByMobile"
