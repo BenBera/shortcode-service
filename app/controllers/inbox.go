@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (controller *Controller) ProcessInbox(ctx context.Context, u *models.Inbox, sdpAutoResponse bool, ipAddress string) (int, interface{}) {
+func (controller *Controller) ProcessInbox(ctx context.Context, u *models.Inbox, sdpAutoResponse bool, ipAddress, linkID string) (int, interface{}) {
 	//ctx, span := controller.Tracer.Start(ctx, "ProcessInbox")
 	//defer span.End()
 	//
@@ -33,11 +33,11 @@ func (controller *Controller) ProcessInbox(ctx context.Context, u *models.Inbox,
 		message = "join"
 	}
 
-	return controller.processMessage(ctx, message, u.Msisdn, u.InboxID, ipAddress, sdpAutoResponse)
+	return controller.processMessage(ctx, message, u.Msisdn, linkID, u.InboxID, ipAddress, sdpAutoResponse)
 
 }
 
-func (controller *Controller) processMessage(ctx context.Context, message, msisdn string, inboxID int64, ipAddress string, sdpAutoResponse bool) (int, interface{}) {
+func (controller *Controller) processMessage(ctx context.Context, message, msisdn, linkID string, inboxID int64, ipAddress string, sdpAutoResponse bool) (int, interface{}) {
 	//logrus.WithContext(ctx).Infof("Processing message: '%s', ID %d ", message, inboxID)
 	//profileID := profile.Id
 	//// First, check if the message matches the SMS betting format
@@ -100,8 +100,8 @@ func (controller *Controller) processMessage(ctx context.Context, message, msisd
 	//logrus.WithContext(ctx).Info("No matching category or autobet found, returning default response")
 	//
 	//// Default response if no keyword matches
-	//defaultResponse := controller.GetSMSTemplate(ctx, "JOIN")
-	//controller.AutoResponse(ctx, inboxID, defaultResponse, sdpAutoResponse)
+	defaultResponse := controller.GetSMSTemplate(ctx, "JOIN")
+	controller.AutoResponse(ctx, linkID, defaultResponse, msisdn, sdpAutoResponse)
 	return http.StatusOK, models.SuccessResponse{
 		Status:  http.StatusOK,
 		Message: "",

@@ -45,7 +45,7 @@ func (controller *Controller) Inbox(c echo.Context) error {
 
 	payload := goutils.GetJSONRawBody(c)
 
-	u := new(models.Inbox)
+	var u models.Inbox
 
 	jsB, _ := json.Marshal(payload)
 
@@ -67,7 +67,7 @@ func (controller *Controller) Inbox(c echo.Context) error {
 	// Get the IP address from the Echo context
 	ipAddress := c.RealIP()
 
-	statusCode, response := controller.ProcessInbox(ctx, u, false, ipAddress)
+	statusCode, response := controller.ProcessInbox(ctx, &u, false, ipAddress, "")
 	t1 := time.Now().UnixMilli()
 	delay := t1 - t0
 	if delay > 3000 {
@@ -76,84 +76,84 @@ func (controller *Controller) Inbox(c echo.Context) error {
 	return RespondRaw(c, statusCode, response)
 }
 
-func (controller *Controller) AutoResponse(ctx context.Context, inboxID int64, message, msisdn string, sdpAutoResponse bool) {
+func (controller *Controller) AutoResponse(ctx context.Context, linkID, message, msisdn string, sdpAutoResponse bool) {
 
-	if sdpAutoResponse || inboxID < 1000 {
+	if sdpAutoResponse {
 
-		_ = controller.SDPAutoresponse(inboxID, message, msisdn)
+		_ = controller.SDPAutoresponse(linkID, message, msisdn)
 		return
 
 	}
-	callbackurl := os.Getenv("shortcode_callback")
-
-	ctx, span := controller.Tracer.Start(ctx, "AutoResponse")
-	defer span.End()
-
-	t4 := time.Now().UnixMilli()
-
-	inserts := map[string]interface{}{
-		"response": message,
-	}
-
-	conditions := map[string]interface{}{
-		"inbox_id": inboxID,
-	}
-
-	dbUtils := goutils.Db{DB: controller.DB, Context: ctx}
-
-	_, err := dbUtils.UpdateWithContext("inbox", conditions, inserts)
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to update inbox",
-				constants.DATA:        fmt.Sprintf("inbox id %d | %s", inboxID, message),
-			}).
-			Error(err.Error())
-
-		return
-	}
-
-	t5 := time.Now().UnixMilli()
-	log.Printf("Update inbox ttl %dms ", t5-t4)
-
-	payload := map[string]interface{}{
-		"inbox_id":     inboxID,
-		"message":      message,
-		"callback_url": callbackurl,
-	}
-
-	endpoint := os.Getenv("sms_autoresponse_endpoint")
-
-	apiKey, err := controller.getIntouchToken()
-	if err != nil {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: "Failed to get api-key",
-			}).
-			Error(err.Error())
-
-		return
-	}
-
-	headers := map[string]string{
-		"api-key": apiKey,
-	}
-
-	st, response := goutils.HTTPPost(endpoint, headers, payload)
-	if st < 200 || st > 210 {
-
-		logrus.WithContext(ctx).
-			WithFields(logrus.Fields{
-				constants.DESCRIPTION: fmt.Sprintf("Invalid status %d sending auto response", st),
-				constants.DATA:        response,
-			}).
-			Error(fmt.Sprintf("Invalid status %d sending auto response", st))
-	}
-
-	t6 := time.Now().UnixMilli()
-	log.Printf("Send response  ttl %dms ", t6-t5)
+	//callbackurl := os.Getenv("shortcode_callback")
+	//
+	//ctx, span := controller.Tracer.Start(ctx, "AutoResponse")
+	//defer span.End()
+	//
+	//t4 := time.Now().UnixMilli()
+	//
+	//inserts := map[string]interface{}{
+	//	"response": message,
+	//}
+	//
+	//conditions := map[string]interface{}{
+	//	"inbox_id": inboxID,
+	//}
+	//
+	//dbUtils := goutils.Db{DB: controller.DB, Context: ctx}
+	//
+	//_, err := dbUtils.UpdateWithContext("inbox", conditions, inserts)
+	//if err != nil {
+	//
+	//	logrus.WithContext(ctx).
+	//		WithFields(logrus.Fields{
+	//			constants.DESCRIPTION: "Failed to update inbox",
+	//			constants.DATA:        fmt.Sprintf("inbox id %d | %s", inboxID, message),
+	//		}).
+	//		Error(err.Error())
+	//
+	//	return
+	//}
+	//
+	//t5 := time.Now().UnixMilli()
+	//log.Printf("Update inbox ttl %dms ", t5-t4)
+	//
+	//payload := map[string]interface{}{
+	//	"inbox_id":     inboxID,
+	//	"message":      message,
+	//	"callback_url": callbackurl,
+	//}
+	//
+	//endpoint := os.Getenv("sms_autoresponse_endpoint")
+	//
+	//apiKey, err := controller.getIntouchToken()
+	//if err != nil {
+	//
+	//	logrus.WithContext(ctx).
+	//		WithFields(logrus.Fields{
+	//			constants.DESCRIPTION: "Failed to get api-key",
+	//		}).
+	//		Error(err.Error())
+	//
+	//	return
+	//}
+	//
+	//headers := map[string]string{
+	//	"api-key": apiKey,
+	//}
+	//
+	//st, response := goutils.HTTPPost(endpoint, headers, payload)
+	//if st < 200 || st > 210 {
+	//
+	//	logrus.WithContext(ctx).
+	//		WithFields(logrus.Fields{
+	//			constants.DESCRIPTION: fmt.Sprintf("Invalid status %d sending auto response", st),
+	//			constants.DATA:        response,
+	//		}).
+	//		Error(fmt.Sprintf("Invalid status %d sending auto response", st))
+	//}
+	//
+	//t6 := time.Now().UnixMilli()
+	//log.Printf("Send response  ttl %dms ", t6-t5)
 
 	return
 
@@ -296,7 +296,7 @@ func (controller *Controller) GetSMSTemplate(ctx context.Context, templateName s
 	var content sql.NullString
 	err := dbUtils.FetchOneSlave().Scan(&content)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 
 		return ""
 	}

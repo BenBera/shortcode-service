@@ -217,7 +217,7 @@ func (controller *Controller) handleKeyMinusOne(ctx context.Context, session str
 func (controller *Controller) handleKeyMinusFour(ctx context.Context, session string, msisdn int64, userResponse string, firstlevelKey string) (models.UssdResponse, error) {
 	firstresponse := models.UssdResponse{Text: MAINRESPONSE, ResponseType: "CON"}
 	//regex check to match password requirements
-	if len(userResponse) < 3 {
+	if len(userResponse) < 6 {
 		return models.UssdResponse{Text: "Password does not meet requirements", ResponseType: "END"}, nil
 	}
 
@@ -271,6 +271,9 @@ func (controller *Controller) handleKeyZero(ctx context.Context, session string,
 		//	firstresponse = models.UssdResponse{ussdtext, ussdresponse}
 		//	library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-3", int(cacheDuration.Seconds()))
 		//} else {
+		ussdtext := "\nEnter your desired password to complete registration"
+		ussdresponse := "CON"
+		firstresponse = models.UssdResponse{Text: ussdtext, ResponseType: ussdresponse}
 		library.SetRedisKeyWithExpiry(controller.RedisConn, firstlevelKey, "-4", int(cacheDuration.Seconds()))
 		//}
 		//profid = fmt.Sprintf("%v", userprofile.Id)

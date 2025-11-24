@@ -128,7 +128,7 @@ func (controller *Controller) SDPIncomingSMS(c echo.Context) error {
 		}
 		ipAddress := c.RealIP()
 
-		statusCode, response := controller.ProcessInbox(ctx, &u, false, ipAddress)
+		statusCode, response := controller.ProcessInbox(ctx, &u, true, ipAddress, LinkId)
 
 		return c.JSON(statusCode, response)
 
@@ -203,7 +203,7 @@ func (controller *Controller) SDPIncomingSMS(c echo.Context) error {
 		}
 		ipAddress := c.RealIP()
 
-		statusCode, response := controller.ProcessInbox(ctx, &u, false, ipAddress)
+		statusCode, response := controller.ProcessInbox(ctx, &u, false, ipAddress, LinkId)
 
 		return c.JSON(statusCode, response)
 
@@ -211,13 +211,13 @@ func (controller *Controller) SDPIncomingSMS(c echo.Context) error {
 
 }
 
-func (controller *Controller) SDPAutoresponse(inboxID int64, message, msisdn string) error {
+func (controller *Controller) SDPAutoresponse(LinkID, message, msisdn string) error {
 	endpoint := os.Getenv("SHORTCODE_URL")
 	payload := models.ShortCodeAutoResponse{
 		Mobile:     msisdn,
 		SenderName: os.Getenv("SHORTCODE_NAME"),
 		ServiceID:  1,
-		LinkID:     fmt.Sprintf("%d", inboxID), //assumption link id is inbox is
+		LinkID:     fmt.Sprintf("%d", LinkID), //assumption link id is inbox is
 		Message:    message,
 	}
 	jsP, _ := json.MarshalIndent(payload, " ", "\t")

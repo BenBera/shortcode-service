@@ -2,6 +2,7 @@ package library
 
 import (
 	"github.com/BenBera/shortcode-service/app/constants"
+	"github.com/BenBera/shortcode-service/app/models"
 )
 
 // Helper function to determine bet status
@@ -22,4 +23,12 @@ func DetermineBetStatus(wonStatus int64) string {
 	default:
 		return "Unknown"
 	}
+}
+func GetItemValue(name string, data models.ShortCodeIncomingRequest) string {
+	for _, item := range data.RequestParam.Data {
+		if item.Name == name {
+			return item.Value
+		}
+	}
+	return ""
 }

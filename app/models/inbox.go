@@ -11,6 +11,18 @@ type Inbox struct {
 	//InboxID id of the message
 	InboxID int64 `json:"inbox_id"`
 }
+type ShortCodeIncomingRequest struct {
+	RequestID        string `json:"requestId"`
+	RequestTimeStamp string `json:"requestTimeStamp"`
+	RequestParam     struct {
+		Data []struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+		} `json:"data"`
+	} `json:"requestParam"`
+	Operation string `json:"operation"`
+}
+
 type MnoInbox struct {
 	Network string      `json:"network"`
 	Payload interface{} `json:"payload"`
@@ -75,7 +87,6 @@ type InboxDLR struct {
 	InboxID int64 `json:"transaction_id"`
 }
 
-
 type SMSError struct {
 	ID             int
 	ErrorType      string
@@ -86,11 +97,11 @@ type SMSError struct {
 }
 
 type EmailSend struct {
-	Subject string            `json:"subject"`
-	Message string            `json:"message"`
-	Summary string            `json:"summary"`
-	Template string 	      `json:"template"`
-	Name string               `json:"name"`
-	Email string			  `json:"email"`
-	ClientID int64            `json:"client_id"`
+	Subject  string `json:"subject"`
+	Message  string `json:"message"`
+	Summary  string `json:"summary"`
+	Template string `json:"template"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	ClientID int64  `json:"client_id"`
 }
